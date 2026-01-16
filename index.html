@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>အကြီးကောင် ကားဂိတ် - A Gyi Kaung Express</title>
+    <style>
+        :root {
+            --primary: #1a237e;
+            --secondary: #2e7d32;
+            --accent: #f44336;
+            --bg: #f8f9fa;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 450px;
+            width: 100%;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            padding-bottom: 40px;
+        }
+
+        /* Language Switcher */
+        .lang-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .lang-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), #3949ab);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            position: relative;
+        }
+
+        .bus-info-card { margin: 20px; padding: 15px; text-align: center; }
+
+        /* Bus Layout */
+        .bus-container {
+            background-color: #263238;
+            padding: 25px 15px;
+            border-radius: 45px 45px 15px 15px;
+            border: 6px solid #1a1a1a;
+            margin: 20px auto;
+            width: 280px;
+        }
+
+        .seat-grid { display: grid; gap: 15px 10px; align-items: center; }
+        .grid-15 { grid-template-columns: 1fr 30px 1fr 1fr; }
+        .grid-10 { grid-template-columns: repeat(5, 1fr); }
+
+        .seat {
+            background-color: #ffffff;
+            border: 2px solid #3498db;
+            padding: 12px 0;
+            text-align: center;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .seat.selected { background-color: #4caf50; border-color: #388e3c; color: white; }
+
+        .driver-box {
+            background-color: var(--accent);
+            color: white;
+            padding: 12px 0;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .aisle { grid-column: 2; }
+        .row-5-wide { grid-column: 1 / span 5; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+
+        /* Buttons Section */
+        .contact-group { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 12px; 
+            padding: 0 20px; 
+            margin-top: 15px;
+        }
+        
+        .btn { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 12px; 
+            border-radius: 12px; 
+            color: white; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 13px;
+            text-align: center;
+        }
+        
+        .btn-call { background-color: #2e7d32; }
+        .btn-fb { background-color: #1877f2; }
+        .btn-viber { background-color: #7360f2; }
+        .btn-tele { background-color: #0088cc; }
+
+        .note { color: #757575; font-size: 12px; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="lang-switch">
+            <button class="lang-btn" onclick="changeLang('my')">မြန်မာ</button>
+            <button class="lang-btn" onclick="changeLang('en')">EN</button>
+        </div>
+        <h1 id="main-title">အကြီးကောင် ကားဂိတ်</h1>
+        <p id="sub-title">မဲဇာ မှ မန္တလေး ခရီးစဉ်</p>
+    </header>
+
+    <div class="bus-info-card">
+        <p id="welcome-msg">လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။</p>
+        <p><b id="online-booking">ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ</b></p>
+    </div>
+
+    <div style="text-align: center;">
+        <h3 id="bus1-title">🚌 အောင်နိုင်သူ / မန်းတိုးတိုး</h3>
+        <div class="bus-container">
+            <div class="seat-grid grid-15">
+                <div class="seat" onclick="selectSeat(this)">A1</div>
+                <div class="aisle"></div>
+                <div class="seat" onclick="selectSeat(this)">A2</div>
+                <div class="driver-box">Driver</div>
+
+                <div class="seat" onclick="selectSeat(this)">B1</div>
+                <div class="aisle"></div>
+                <div class="seat" onclick="selectSeat(this)">B2</div>
+                <div class="seat" onclick="selectSeat(this)">B3</div>
+
+                <div class="seat" onclick="selectSeat(this)">C1</div>
+                <div class="aisle"></div>
+                <div class="seat" onclick="selectSeat(this)">C2</div>
+                <div class="seat" onclick="selectSeat(this)">C3</div>
+
+                <div class="seat" onclick="selectSeat(this)">D1</div>
+                <div class="aisle"></div>
+                <div class="seat" onclick="selectSeat(this)">D2</div>
+                <div class="seat" onclick="selectSeat(this)">D3</div>
+
+                <div class="seat" onclick="selectSeat(this)">E1</div>
+                <div class="seat" onclick="selectSeat(this)">E2</div>
+                <div class="seat" onclick="selectSeat(this)">E3</div>
+                <div class="seat" onclick="selectSeat(this)">E4</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <h3 id="bus2-title">🛻 ဖိုးဝီး (၁၀ ခုံတွဲ)</h3>
+        <div class="bus-container" style="width: 300px;">
+            <div class="seat-grid grid-10">
+                <div class="driver-box" style="grid-column: 1 / span 2;">Driver</div>
+                <div style="grid-column: 3;"></div>
+                <div class="seat" onclick="selectSeat(this)">1</div>
+                <div class="seat" onclick="selectSeat(this)">2</div>
+
+                <div class="seat" style="grid-column: 1 / span 2;" onclick="selectSeat(this)">3</div>
+                <div style="grid-column: 3;"></div>
+                <div class="seat" onclick="selectSeat(this)">4</div>
+                <div class="seat" onclick="selectSeat(this)">5</div>
+
+                <div class="row-5-wide">
+                    <div class="seat" onclick="selectSeat(this)">6</div>
+                    <div class="seat" onclick="selectSeat(this)">7</div>
+                    <div class="seat" onclick="selectSeat(this)">8</div>
+                    <div class="seat" onclick="selectSeat(this)">9</div>
+                    <div class="seat" onclick="selectSeat(this)">10</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="note" id="instruction">(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screen Shot ရိုက်ပို့ပေးနိုင်ပါသည်)</p>
+
+    <h3 style="text-align: center; font-size: 16px;" id="contact-title">ဆက်သွယ်ရန်</h3>
+    <div class="contact-group">
+        <a href="tel:+959777963991" class="btn btn-call" id="btn-call">📞 ဖုန်းခေါ်ရန်</a>
+        <a href="https://m.me/ko.phyo.227755" class="btn btn-fb" id="btn-msg">💬 Messenger</a>
+        <a href="viber://add?number=959777963991" class="btn btn-viber" id="btn-viber">💜 Viber</a>
+        <a href="https://t.me/heinmezat" class="btn btn-tele" id="btn-tele">✈️ Telegram</a>
+    </div>
+
+</div>
+
+<script>
+    const data = {
+        my: {
+            title: "အကြီးကောင် ကားဂိတ်",
+            subTitle: "မဲဇာ မှ မန္တလေး ခရီးစဉ်",
+            welcome: "လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။",
+            online: "ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ",
+            bus1: "🚌 အောင်နိုင်သူ / မန်းတိုးတိုး",
+            bus2: "🛻 ဖိုးဝီး (၁၀ ခုံတွဲ)",
+            note: "(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screen Shot ရိုက်ပို့ပေးနိုင်ပါသည်)",
+            contact: "ဆက်သွယ်ရန်",
+            call: "📞 ဖုန်းခေါ်ရန်",
+            msg: "💬 Messenger",
+            viber: "💜 Viber",
+            tele: "✈️ Telegram"
+        },
+        en: {
+            title: "A Gyi Kaung Express",
+            subTitle: "Meza - Mandalay Trip",
+            welcome: "We are providing the best service for your comfortable journey.",
+            online: "Book your tickets online now!",
+            bus1: "🚌 Aung Naing Thu / Mann Toe Toe",
+            bus2: "🛻 4-Wheel (10 Seats)",
+            note: "(Click seat to select and send us a screenshot)",
+            contact: "Contact Us",
+            call: "📞 Call Now",
+            msg: "💬 Messenger",
+            viber: "💜 Viber",
+            tele: "✈️ Telegram"
+        }
+    };
+
+    function changeLang(lang) {
+        document.getElementById('main-title').innerText = data[lang].title;
+        document.getElementById('sub-title').innerText = data[lang].subTitle;
+        document.getElementById('welcome-msg').innerText = data[lang].welcome;
+        document.getElementById('online-booking').innerText = data[lang].online;
+        document.getElementById('bus1-title').innerText = data[lang].bus1;
+        document.getElementById('bus2-title').innerText = data[lang].bus2;
+        document.getElementById('instruction').innerText = data[lang].note;
+        document.getElementById('contact-title').innerText = data[lang].contact;
+        document.getElementById('btn-call').innerText = data[lang].call;
+        document.getElementById('btn-msg').innerText = data[lang].msg;
+        document.getElementById('btn-viber').innerText = data[lang].viber;
+        document.getElementById('btn-tele').innerText = data[lang].tele;
+    }
+
+    function selectSeat(el) { el.classList.toggle('selected'); }
+</script>
+
+</body>
+</html>
