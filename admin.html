@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGK - Multi-Bus Booking System</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #1a237e; --secondary: #2e7d32; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
+        .container { max-width: 500px; margin: auto; background: white; min-height: 100vh; padding-bottom: 50px; }
+        header { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
+        .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; color: white; }
+        
+        /* Bus Card */
+        .bus-card { background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin-bottom: 10px; cursor: pointer; }
+        .bus-card:hover { border-color: var(--primary); }
+
+        /* Seats */
+        .bus-layout { background: #263238; padding: 20px; border-radius: 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .seat { background: white; padding: 10px 0; text-align: center; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .seat.sold { background: #f44336; color: white; cursor: not-allowed; }
+        .seat.selected { background: #4caf50; color: white; }
+
+        #form-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; }
+        .modal-content { background:white; width:80%; margin:20% auto; padding:20px; border-radius:10px; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen" class="container" style="text-align:center; padding-top:100px;">
+    <h2>AGK Bus System Login</h2>
+    <div style="padding:20px;">
+        <input type="email" id="login-email" placeholder="Email">
+        <input type="password" id="login-pass" placeholder="Password">
+        <button class="btn" style="background:var(--primary)" onclick="login()">ဝင်ရောက်ရန်</button>
+    </div>
+</div>
+
+<div id="app-screen" class="container" style="display:none;">
+    <header>
+        <span id="user-tag" style="position:absolute; left:10px; top:10px; font-size:10px;"></span>
+        <button onclick="logout()" style="position:absolute; right:10px; top:10px; background:red; color:white; border:none; padding:5px; border-radius:3px;">ထွက်ရန်</button>
+        <h3>အကြီးကောင် ကားဂိတ်</h3>
+    </header>
+
+    <div id="admin-tools" class="section" style="display:none; background:#e8f5e9;">
+        <h4>ခရီးစဉ်အသစ်ဖွင့်ရန် (Admin Only)</h4>
+        <input type="text" id="bus-name" placeholder="ကားနာမည် (ဥပမာ- အောင်နိုင်သူ)">
+        <input type="date" id="bus-date">
+        <input type="time" id="bus-time">
+        <button class="btn" style="background:var(--secondary)" onclick="createTrip()">ခရီးစဉ်တင်မည်</button>
+    </div>
+
+    <div class="section">
+        <h4>လက်ရှိထွက်မည့်ကားများ</h4>
+        <div id="bus-list"></div>
+    </div>
+
+    <div id="booking-area" class="section" style="display:none;">
+        <button onclick="hideBooking()" style="margin-bottom:10px; background:#666; color:white; border:none; padding:5px;">← ရှေ့သို့ပြန်သွားရန်</button>
+        <h3 id="target-bus-info"></h3>
+        <div id="seat-map" class="bus-layout"></div>
+    </div>
+</div>
+
+<div id="form-modal">
+    <div class="modal-content">
+        <h4 id="seat-label"></h4>
+        <input type="text" id="c-name" placeholder="ခရီးသည်အမည်">
+        <input type="tel" id="c-phone" placeholder="ဖုန်းနံပါတ်">
+        <button class="btn" style="background:var(--secondary)" onclick="confirmBooking()">လက်မှတ်ဖြတ်မည်</button>
+        <button class="btn" style="background:#ccc; margin-top:5px; color:black;" onclick="closeModal()">ပိတ်ပါ</button>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCOMMiWvHADYvb4ILURBero7YDh-Z1sknw",
+        authDomain: "a-gyi-kaung.firebaseapp.com",
+        projectId: "a-gyi-kaung",
+        databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com",
+        storageBucket: "a-gyi-kaung.firebasestorage.app",
+        messagingSenderId: "1002724874482",
+        appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    let currentTripId = null;
+    let selectedSeat = null;
+
+    function login() {
+        auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value);
+    }
+    function logout() { auth.signOut(); }
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            document.getElementById('user-tag').innerText = user.email;
+            if(user.email === 'admin@agk.com') document.getElementById('admin-tools').style.display = 'block';
+            loadTrips();
+        } else {
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('app-screen').style.display = 'none';
+        }
+    });
+
+    function createTrip() {
+        const name = document.getElementById('bus-name').value;
+        const date = document.getElementById('bus-date').value;
+        const time = document.getElementById('bus-time').value;
+        if(!name || !date || !time) return alert("အချက်အလက်ဖြည့်ပါ");
+        const id = Date.now();
+        db.ref('trips/' + id).set({ name, date, time, id });
+        alert("ခရီးစဉ်အသစ် တင်ပြီးပါပြီ");
+    }
+
+    function loadTrips() {
+        db.ref('trips').on('value', snap => {
+            const data = snap.val();
+            let html = '';
+            for(let id in data) {
+                html += `<div class="bus-card" onclick="showBooking('${id}', '${data[id].name} - ${data[id].date}')">
+                    <strong>${data[id].name}</strong><br>📅 ${data[id].date} | ⏰ ${data[id].time}
+                </div>`;
+            }
+            document.getElementById('bus-list').innerHTML = html || 'ကားစာရင်းမရှိသေးပါ။';
+        });
+    }
+
+    function showBooking(id, info) {
+        currentTripId = id;
+        document.getElementById('bus-list').style.display = 'none';
+        document.getElementById('booking-area').style.display = 'block';
+        document.getElementById('target-bus-info').innerText = info;
+        renderSeats(id);
+    }
+
+    function hideBooking() {
+        document.getElementById('bus-list').style.display = 'block';
+        document.getElementById('booking-area').style.display = 'none';
+    }
+
+    function renderSeats(tripId) {
+        db.ref('bookings/' + tripId).on('value', snap => {
+            const booked = snap.val() || {};
+            const map = document.getElementById('seat-map');
+            map.innerHTML = '';
+            for(let i=1; i<=20; i++) {
+                const sName = "Seat-" + i;
+                const isSold = booked[sName];
+                const div = document.createElement('div');
+                div.className = `seat ${isSold ? 'sold' : ''}`;
+                div.innerText = i;
+                if(!isSold) div.onclick = () => openModal(sName);
+                else div.onclick = () => alert(`ခရီးသည်: ${isSold.name}\nဖုန်း: ${isSold.phone}\nရောင်းသူ: ${isSold.seller}`);
+                map.appendChild(div);
+            }
+        });
+    }
+
+    function openModal(s) {
+        selectedSeat = s;
+        document.getElementById('seat-label').innerText = s + " အတွက် အချက်အလက်ဖြည့်ပါ";
+        document.getElementById('form-modal').style.display = 'block';
+    }
+
+    function closeModal() { document.getElementById('form-modal').style.display = 'none'; }
+
+    function confirmBooking() {
+        const name = document.getElementById('c-name').value;
+        const phone = document.getElementById('c-phone').value;
+        if(!name || !phone) return alert("အမည်နှင့်ဖုန်းဖြည့်ပါ");
+        
+        db.ref(`bookings/${currentTripId}/${selectedSeat}`).set({
+            name, phone, seller: auth.currentUser.email
+        }).then(() => {
+            closeModal();
+            document.getElementById('c-name').value = '';
+            document.getElementById('c-phone').value = '';
+        });
+    }
+</script>
+</body>
+</html>
