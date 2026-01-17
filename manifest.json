@@ -1,0 +1,16 @@
+{
+  "short_name": "အကြီးကောင်",
+  "name": "အကြီးကောင် ကားဂိတ်",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/713/713311.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#f8f9fa",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#1a237e"
+}
