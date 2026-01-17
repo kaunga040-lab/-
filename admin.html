@@ -72,15 +72,17 @@
 
 <script>
     // ဤအပိုင်းသည် အရေးအကြီးဆုံးဖြစ်ပါသည်
-    const firebaseConfig = {
-        apiKey: "AIzaSyCOMMiWvHADYvb4ILURBero7YDh-Z1sknw",
-        authDomain: "a-gyi-kaung.firebaseapp.com",
-        projectId: "a-gyi-kaung",
-        databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com",
-        storageBucket: "a-gyi-kaung.firebasestorage.app",
-        messagingSenderId: "1002724874482",
-        appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
-    };
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCOMMiWvHADYvb4ILURBero7YDh-Z1sknw",
+    authDomain: "a-gyi-kaung.firebaseapp.com",
+    databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com",
+    projectId: "a-gyi-kaung",
+    storageBucket: "a-gyi-kaung.firebasestorage.app",
+    messagingSenderId: "1002724874482",
+    appId: "1:1002724874482:web:7b08378f45b237cc3f986b",
+    measurementId: "G-P43X0L10GG"
+};
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
