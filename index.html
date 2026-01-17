@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a237e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="အကြီးကောင်">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>အကြီးကောင် ကားဂိတ် - A Gyi Kaung Express</title>
@@ -144,7 +150,19 @@
     </header>
 
     <div class="bus-info-card">
+       <h3>အကြီး‌ေကာင် ကားဂိတ် မှကြိုဆိုပါတယ်</h3>
         <p id="welcome-msg">လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။</p>
+     
+    <p>အကြီး‌ေကာင် ကားဂိတ်ဟာ ခုဆိုရင် ကားလိုင်း‌ေပါာင်းစံုကို ‌ေပြးဆွဲလျက်ရှိပါသည်</p>
+    <p>လူကြီးမင်းတိုအ‌ေနနဲ့ မဲဇာမှ မန္တ‌ေလးကို စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ပါပြီ</p>
+    <p>ကားလက်မှတ်များကို onlineက‌ေနလည်းမှာယူနိုင်ပါပြီ</p>
+    <p>ကားပုံကို‌ေအာက်မှာကြည့်နိုင်ပါတယ်</p>
+    
+    <img src="myphoto.jpg" alt="ကားပုံ" width="300">
+    
+        
+        
+        
         <p><b id="online-booking">ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ</b></p>
     </div>
 
@@ -265,7 +283,11 @@
     }
 
     function selectSeat(el) { el.classList.toggle('selected'); }
-</script>
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js');
+}
+</script>
 </body>
-</html>
+                                                  </html>
+    
