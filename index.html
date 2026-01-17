@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a237e">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<meta name="apple-mobile-web-app-title" content="အကြီးကောင်">
-
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a237e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="အကြီးကောင်">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>အကြီးကောင် ကားဂိတ် - A Gyi Kaung Express</title>
@@ -23,20 +22,28 @@
             background-color: var(--bg);
             margin: 0;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center; /* အလယ်ဗဟိုကျစေရန် */
         }
 
         .container {
-            max-width: 450px;
             width: 100%;
+            max-width: 600px; /* အကျယ်ဆုံး 600px ထိ ကားသွားမည် */
             background: white;
             min-height: 100vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             padding-bottom: 40px;
         }
 
-        /* Language Switcher */
+        header {
+            background: linear-gradient(135deg, var(--primary), #3949ab);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            position: relative;
+        }
+
         .lang-switch {
             position: absolute;
             top: 20px;
@@ -55,26 +62,30 @@
             font-size: 12px;
         }
 
-        header {
-            background: linear-gradient(135deg, var(--primary), #3949ab);
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-            border-bottom-left-radius: 40px;
-            border-bottom-right-radius: 40px;
-            position: relative;
+        .bus-info-card { 
+            margin: 20px; 
+            padding: 15px; 
+            text-align: center; 
         }
 
-        .bus-info-card { margin: 20px; padding: 15px; text-align: center; }
+        /* ပုံကို အချိုးကျဖြစ်စေရန် */
+        .bus-image {
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
 
-        /* Bus Layout */
+        /* Bus Layout ကို အချိုးကျဖြစ်စေရန် */
         .bus-container {
             background-color: #263238;
             padding: 25px 15px;
             border-radius: 45px 45px 15px 15px;
             border: 6px solid #1a1a1a;
             margin: 20px auto;
-            width: 280px;
+            width: 90%; /* ပုံသေ width အစား ရာခိုင်နှုန်းပြောင်းသည် */
+            max-width: 320px; 
         }
 
         .seat-grid { display: grid; gap: 15px 10px; align-items: center; }
@@ -107,10 +118,10 @@
         .aisle { grid-column: 2; }
         .row-5-wide { grid-column: 1 / span 5; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
 
-        /* Buttons Section */
+        /* Buttons Section - ဘေးချင်းယှဉ်ရန် */
         .contact-group { 
             display: grid; 
-            grid-template-columns: 1fr 1fr; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
             gap: 12px; 
             padding: 0 20px; 
             margin-top: 15px;
@@ -126,7 +137,6 @@
             text-decoration: none; 
             font-weight: bold; 
             font-size: 13px;
-            text-align: center;
         }
         
         .btn-call { background-color: #2e7d32; }
@@ -152,16 +162,8 @@
     <div class="bus-info-card">
        <h3>အကြီး‌ေကာင် ကားဂိတ် မှကြိုဆိုပါတယ်</h3>
         <p id="welcome-msg">လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။</p>
-     
-    <p>အကြီး‌ေကာင် ကားဂိတ်ဟာ ခုဆိုရင် ကားလိုင်း‌ေပါာင်းစံုကို ‌ေပြးဆွဲလျက်ရှိပါသည်</p>
-    <p>လူကြီးမင်းတိုအ‌ေနနဲ့ မဲဇာမှ မန္တ‌ေလးကို စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ပါပြီ</p>
-    <p>ကားလက်မှတ်များကို onlineက‌ေနလည်းမှာယူနိုင်ပါပြီ</p>
-    <p>ကားပုံကို‌ေအာက်မှာကြည့်နိုင်ပါတယ်</p>
-    
-    <img src="myphoto.jpg" alt="ကားပုံ" width="300">
-    
         
-        
+        <img src="nyphoto.jpg" alt="ကားပုံ" class="bus-image">
         
         <p><b id="online-booking">ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ</b></p>
     </div>
@@ -198,9 +200,9 @@
         </div>
     </div>
 
-    <div style="text-align: center;">
+    <div style="text-align: center; margin-top: 20px;">
         <h3 id="bus2-title">🛻 ဖိုးဝီး (၁၀ ခုံတွဲ)</h3>
-        <div class="bus-container" style="width: 300px;">
+        <div class="bus-container">
             <div class="seat-grid grid-10">
                 <div class="driver-box" style="grid-column: 1 / span 2;">Driver</div>
                 <div style="grid-column: 3;"></div>
@@ -284,10 +286,10 @@
 
     function selectSeat(el) { el.classList.toggle('selected'); }
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js');
-}
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
 </script>
 </body>
-                                                  </html>
-    
+  </html>
+  
