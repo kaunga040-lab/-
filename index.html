@@ -1,93 +1,47 @@
 <!DOCTYPE html>
 <html lang="my">
 <head>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1a237e">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="အကြီးကောင်">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>အကြီးကောင် ကားဂိတ် - A Gyi Kaung Express</title>
-    <style>
-        :root { --primary: #1a237e; --secondary: #2e7d32; --accent: #f44336; --bg: #f8f9fa; }
-        body { font-family: sans-serif; background-color: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 600px; width: 95%; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding-bottom: 40px; margin: 0 auto; }
-        header { background: linear-gradient(135deg, var(--primary), #3949ab); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; position: relative; }
-        .lang-switch { position: absolute; top: 20px; right: 20px; display: flex; gap: 5px; }
-        .lang-btn { background: rgba(255,255,255,0.2); border: 1px solid white; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
-        
-        /* New Staff Login Button Style */
-        .staff-login-area { padding: 20px; text-align: center; border-top: 1px dashed #ddd; margin-top: 30px; }
-        .btn-staff { display: inline-block; background: var(--primary); color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3); }
-
-        .bus-info-card { margin: 20px; padding: 15px; text-align: center; }
-        .bus-container { background-color: #263238; padding: 25px 15px; border-radius: 45px 45px 15px 15px; border: 6px solid #1a1a1a; margin: 20px auto; width: auto; max-width: 320px; }
-        .seat-grid { display: grid; gap: 15px 10px; align-items: center; }
-        .grid-15 { grid-template-columns: 1fr 30px 1fr 1fr; }
-        .grid-10 { grid-template-columns: repeat(5, 1fr); }
-        .seat { background-color: #ffffff; border: 2px solid #3498db; padding: 12px 0; text-align: center; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
-        .seat.selected { background-color: #4caf50; border-color: #388e3c; color: white; }
-        .driver-box { background-color: var(--accent); color: white; padding: 12px 0; border-radius: 10px; font-weight: bold; text-align: center; font-size: 11px; }
-        .contact-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px; margin-top: 15px; }
-        .btn { display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px; color: white; text-decoration: none; font-weight: bold; font-size: 13px; text-align: center; }
-        .btn-call { background-color: #2e7d32; } .btn-fb { background-color: #1877f2; } .btn-viber { background-color: #7360f2; } .btn-tele { background-color: #0088cc; }
-        .note { color: #757575; font-size: 12px; text-align: center; padding: 20px; }
-    </style>
+    <title>A Gyi Kaung - Customer</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --primary: #1a237e; --accent: #fbc02d; }
+        body { font-family: sans-serif; background: #f8f9fa; margin: 0; text-align: center; }
+        .container { max-width: 500px; margin: auto; background: white; min-height: 100vh; padding: 20px; }
+        .bus-list-item { padding: 15px; border: 2px solid #ddd; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
+        
+        .bus-container { background: #263238; padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
+        .seat { background: white; padding: 12px 0; border-radius: 8px; font-weight: bold; cursor: pointer; border: 2px solid #3498db; }
+        .seat.sold { background: #f44336; color: white; border-color: #b71c1c; cursor: not-allowed; }
+        
+        /* ရွေးထားတဲ့ခုံ လှုပ်နေစေရန် Animation */
+        @keyframes shake { 0% {transform: rotate(0)} 25% {transform: rotate(3deg)} 50% {transform: rotate(-3deg)} 100% {transform: rotate(0)} }
+        .seat.selected { background: var(--accent); border-color: #f57f17; animation: shake 0.3s infinite; }
 
+        .last-row { grid-column: span 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
+    </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <div class="lang-switch">
-            <button class="lang-btn" onclick="changeLang('my')">မြန်မာ</button>
-            <button class="lang-btn" onclick="changeLang('en')">EN</button>
-        </div>
-        <h1 id="main-title">အကြီးကောင် ကားဂိတ်</h1>
-        <p id="sub-title">မဲဇာ မှ မန္တလေး ခရီးစဉ်</p>
-    </header>
-
-    <div class="bus-info-card">
-       <h3>အကြီး‌ေကာင် ကားဂိတ် မှကြိုဆိုပါတယ်</h3>
-        <p id="welcome-msg">လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။</p>
-        <img src="myphoto.jpg" alt="ကားပုံ" style="width: 100%; max-width: 500px; height: auto; border-radius: 10px; margin: 15px 0;">
-        <p><b id="online-booking">ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ</b></p>
+    <h2 id="title">အကြီးကောင် ကားဂိတ်</h2>
+    
+    <div id="trip-list-view">
+        <h4>ကားလိုင်းများ ရွေးချယ်ပါ</h4>
+        <div id="bus-list"></div>
     </div>
 
-    <div style="text-align: center;">
-        <h3 id="bus1-title">🚌 အောင်နိုင်သူ / မန်းတိုးတိုး</h3>
-        <div class="bus-container">
-            <div class="seat-grid grid-15">
-                <div class="seat" onclick="selectSeat(this)">A1</div><div class="aisle"></div><div class="seat" onclick="selectSeat(this)">A2</div><div class="driver-box">Driver</div>
-                <div class="seat" onclick="selectSeat(this)">B1</div><div class="aisle"></div><div class="seat" onclick="selectSeat(this)">B2</div><div class="seat" onclick="selectSeat(this)">B3</div>
-                <div class="seat" onclick="selectSeat(this)">C1</div><div class="aisle"></div><div class="seat" onclick="selectSeat(this)">C2</div><div class="seat" onclick="selectSeat(this)">C3</div>
-                <div class="seat" onclick="selectSeat(this)">D1</div><div class="aisle"></div><div class="seat" onclick="selectSeat(this)">D2</div><div class="seat" onclick="selectSeat(this)">D3</div>
-                <div class="seat" onclick="selectSeat(this)">E1</div><div class="seat" onclick="selectSeat(this)">E2</div><div class="seat" onclick="selectSeat(this)">E3</div><div class="seat" onclick="selectSeat(this)">E4</div>
-            </div>
-        </div>
-    </div>
-
-    <p class="note" id="instruction">(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screen Shot ရိုက်ပို့ပေးနိုင်ပါသည်)</p>
-
-    <div class="staff-login-area">
-        <a href="admin.html" class="btn-staff">🎟️ လက်မှတ်ရောင်းရန် (Staff Only)</a>
-        <p style="font-size: 10px; color: #999; margin-top: 10px;">ဝန်ထမ်းများသာ ဝင်ရောက်ရန် ဖြစ်ပါသည်။</p>
-    </div>
-
-    <h3 style="text-align: center; font-size: 16px; margin-top: 30px;" id="contact-title">ဆက်သွယ်ရန်</h3>
-    <div class="contact-group">
-        <a href="tel:+959777963991" class="btn btn-call" id="btn-call">📞 ဖုန်းခေါ်ရန်</a>
-        <a href="https://m.me/ko.phyo.227755" class="btn btn-fb" id="btn-msg">💬 Messenger</a>
-        <a href="viber://add?number=959777963991" class="btn btn-viber" id="btn-viber">💜 Viber</a>
-        <a href="https://t.me/heinmezat" class="btn btn-tele" id="btn-tele">✈️ Telegram</a>
+    <div id="booking-view" style="display: none;">
+        <button onclick="location.reload()" style="padding: 10px; margin-bottom: 10px;">← ရှေ့သို့ပြန်သွားရန်</button>
+        <h3 id="sel-bus-name"></h3>
+        <div id="seat-map" class="bus-container"></div>
+        <p style="color: #666; font-size: 12px;">(ခုံရွေးပြီး Screenshot ရိုက်ပို့ပေးပါ)</p>
     </div>
 </div>
 
 <script>
-    // Firebase Config (admin.html ထဲကအတိုင်း အတူတူပင်ဖြစ်ရမည်)
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -101,73 +55,44 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // လက်ရှိ နောက်ဆုံးခရီးစဉ်၏ Data ကို ဖတ်ရန်
-    function listenBookings() {
-        // trips ထဲက နောက်ဆုံးတင်ထားတဲ့ ခရီးစဉ် ID ကို ယူမည်
-        db.ref('trips').limitToLast(1).on('value', snap => {
-            const trips = snap.val();
-            if (!trips) return;
-            
-            const tripId = Object.keys(trips)[0];
-            const tripName = trips[tripId].name;
-            document.getElementById('bus1-title').innerText = "🚌 " + tripName;
+    // ကားလိုင်းအားလုံးကို ပြရန်
+    db.ref('trips').on('value', snap => {
+        const data = snap.val();
+        let html = '';
+        for(let id in data) {
+            html += `<div class="bus-list-item" onclick="showBus('${id}', '${data[id].name}')">
+                <strong>🚌 ${data[id].name}</strong><br>📅 ${data[id].date} | ⏰ ${data[id].time}
+            </div>`;
+        }
+        document.getElementById('bus-list').innerHTML = html || 'ခရီးစဉ်မရှိသေးပါ။';
+    });
 
-            // ထို tripId အတွက် ရောင်းပြီးသားခုံများကို စစ်မည်
-            db.ref('bookings/' + tripId).on('value', bookSnap => {
-                const booked = bookSnap.val() || {};
-                updateSeatUI(booked);
+    function showBus(id, name) {
+        document.getElementById('trip-list-view').style.display = 'none';
+        document.getElementById('booking-view').style.display = 'block';
+        document.getElementById('sel-bus-name').innerText = name;
+        
+        db.ref('bookings/' + id).on('value', snap => {
+            const booked = snap.val() || {};
+            const map = document.getElementById('seat-map');
+            map.innerHTML = '';
+            const layout = [['A1','A2','D'],['B1','B2','B3'],['C1','C2','C3'],['D1','D2','D3'],['E1','E2','E3','E4']];
+            
+            layout.forEach((row, idx) => {
+                const target = (idx === 4) ? document.createElement('div') : map;
+                if(idx === 4) target.className = 'last-row';
+                row.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = s === 'D' ? 'seat' : `seat ${booked[s] ? 'sold' : ''}`;
+                    div.innerText = s === 'D' ? 'Driver' : s;
+                    if(s !== 'D' && !booked[s]) div.onclick = () => div.classList.toggle('selected');
+                    if(booked[s]) div.innerText = s + " (Sold)";
+                    target.appendChild(div);
+                });
+                if(idx === 4) map.appendChild(target);
             });
         });
     }
-
-    function updateSeatUI(booked) {
-        const allSeats = document.querySelectorAll('.seat');
-        allSeats.forEach(seat => {
-            const seatName = seat.innerText.trim();
-            if (booked[seatName]) {
-                // ရောင်းပြီးသားခုံဖြစ်ပါက
-                seat.style.backgroundColor = "#f44336"; // အနီရောင် (သို့) မီးခိုးရောင်
-                seat.style.borderColor = "#b71c1c";
-                seat.style.color = "white";
-                seat.style.cursor = "not-allowed";
-                seat.onclick = null; // နှိပ်လို့မရအောင်လုပ်ခြင်း
-                seat.innerText = seatName + " (Sold)";
-            } else {
-                // ကျန်ရှိသေးသောခုံဖြစ်ပါက (မူလပုံစံအတိုင်း ပြန်ထားခြင်း)
-                seat.style.backgroundColor = "#ffffff";
-                seat.style.borderColor = "#3498db";
-                seat.style.color = "black";
-                seat.style.cursor = "pointer";
-                seat.innerText = seatName;
-                seat.onclick = function() { selectSeat(this); };
-            }
-        });
-    }
-
-    // နိုင်ငံတကာ ဘာသာစကားပြောင်းခြင်း Function
-    const data = {
-        my: { title: "အကြီးကောင် ကားဂိတ်", subTitle: "မဲဇာ မှ မန္တလေး ခရီးစဉ်", welcome: "လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။", online: "ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ", bus1: "🚌 အောင်နိုင်သူ / မန်းတိုးတိုး", note: "(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screen Shot ရိုက်ပို့ပေးနိုင်ပါသည်)", contact: "ဆက်သွယ်ရန်", call: "📞 ဖုန်းခေါ်ရန်", msg: "💬 Messenger", viber: "💜 Viber", tele: "✈️ Telegram" },
-        en: { title: "A Gyi Kaung Express", subTitle: "Meza - Mandalay Trip", welcome: "We are providing the best service for your comfortable journey.", online: "Book your tickets online now!", bus1: "🚌 Aung Naing Thu / Mann Toe Toe", note: "(Click seat to select and send us a screenshot)", contact: "Contact Us", call: "📞 Call Now", msg: "💬 Messenger", viber: "💜 Viber", tele: "✈️ Telegram" }
-    };
-
-    function changeLang(lang) {
-        document.getElementById('main-title').innerText = data[lang].title;
-        document.getElementById('sub-title').innerText = data[lang].subTitle;
-        document.getElementById('welcome-msg').innerText = data[lang].welcome;
-        document.getElementById('online-booking').innerText = data[lang].online;
-        document.getElementById('instruction').innerText = data[lang].note;
-        document.getElementById('contact-title').innerText = data[lang].contact;
-        document.getElementById('btn-call').innerText = data[lang].call;
-        document.getElementById('btn-msg').innerText = data[lang].msg;
-        document.getElementById('btn-viber').innerText = data[lang].viber;
-        document.getElementById('btn-tele').innerText = data[lang].tele;
-    }
-
-    function selectSeat(el) { el.classList.toggle('selected'); }
-
-    // Page စဖွင့်သည်နှင့် Database ကို နားထောင်မည်
-    listenBookings();
 </script>
-
 </body>
 </html>
