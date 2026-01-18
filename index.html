@@ -15,24 +15,32 @@
         .container { max-width: 600px; width: 95%; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding-bottom: 40px; margin: 0 auto; }
         header { background: linear-gradient(135deg, var(--primary), #3949ab); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; position: relative; }
         
-        /* မူရင်း Bus Info Card */
-        .bus-info-card { margin: 20px; padding: 15px; text-align: center; }
+        /* Bus List Styling */
         .bus-item { background: white; border: 2px solid #ddd; border-radius: 15px; padding: 15px; margin: 10px 20px; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .bus-item:hover { border-color: var(--primary); background: #f0f2ff; }
 
-        /* ခုံဇယားဒီဇိုင်း */
+        /* Bus Layout */
         .bus-container { background-color: #263238; padding: 25px 15px; border-radius: 45px 45px 15px 15px; border: 6px solid #1a1a1a; margin: 20px auto; width: auto; max-width: 320px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .seat { background-color: #ffffff; border: 2px solid #3498db; padding: 12px 0; text-align: center; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
         .seat.sold { background-color: #f44336; border-color: #b71c1c; color: white; cursor: not-allowed; }
         
-        /* ခုံလှုပ်မည့် Animation */
+        /* Shake Animation */
         @keyframes shake { 0% {transform: rotate(0)} 25% {transform: rotate(3deg)} 50% {transform: rotate(-3deg)} 100% {transform: rotate(0)} }
         .seat.selected { background-color: var(--accent); border-color: #f57f17; animation: shake 0.3s infinite; }
 
         .last-row { grid-column: span 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
+
+        /* Staff Login Area */
+        .staff-login-area { padding: 20px; text-align: center; border-top: 1px dashed #ddd; margin-top: 30px; }
+        .btn-staff { display: inline-block; background: var(--primary); color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3); }
+
+        /* Contact Buttons */
         .contact-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px; margin-top: 15px; }
         .btn { display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px; color: white; text-decoration: none; font-weight: bold; font-size: 13px; text-align: center; }
-        .btn-call { background-color: #2e7d32; } .btn-fb { background-color: #1877f2; }
+        .btn-call { background-color: #2e7d32; } 
+        .btn-fb { background-color: #1877f2; } 
+        .btn-viber { background-color: #7360f2; } 
+        .btn-tele { background-color: #0088cc; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -46,25 +54,31 @@
     </header>
 
     <div id="home-view">
-        <div class="bus-info-card">
-           <h3>A Gyi Kaung Express မှ ကြိုဆိုပါတယ်</h3>
-           <img src="myphoto.jpg" alt="ကားပုံ" style="width: 100%; max-width: 500px; border-radius: 10px; margin: 15px 0;">
+        <div style="text-align: center; padding: 20px;">
+           <h3>အကြီး‌ေကာင် မှကြိုဆိုပါတယ်</h3>
+           <img src="myphoto.jpg" alt="ကားပုံ" style="width: 100%; max-width: 500px; border-radius: 10px; margin-bottom: 15px;">
            <p><b>လက်ရှိထွက်ခွာမည့် ကားလိုင်းများ</b></p>
         </div>
         <div id="bus-list"></div>
     </div>
 
     <div id="booking-view" style="display: none; padding: 20px;">
-        <button onclick="location.reload()" style="padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: #eee; cursor: pointer;">← ပြန်ထွက်ရန်</button>
+        <button onclick="location.reload()" style="padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: #eee; cursor: pointer; margin-bottom: 20px;">← ရှေ့သို့ပြန်သွားရန်</button>
         <h3 id="sel-bus-title" style="text-align: center; color: var(--primary);"></h3>
         <div id="seat-map" class="bus-container"></div>
-        <p style="text-align: center; font-size: 12px; color: #757575;">(ခုံရွေးပြီး Screenshot ရိုက်ပို့ပေးပါ)</p>
+        <p style="text-align: center; font-size: 12px; color: #757575;">(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screenshot ရိုက်ပို့ပေးပါ)</p>
+    </div>
+
+    <div class="staff-login-area">
+        <a href="admin.html" class="btn-staff">🎟️ လက်မှတ်ရောင်းရန် (Staff Only)</a>
     </div>
 
     <h3 style="text-align: center; margin-top: 30px;">ဆက်သွယ်ရန်</h3>
     <div class="contact-group">
         <a href="tel:+959777963991" class="btn btn-call">📞 ဖုန်းခေါ်ရန်</a>
         <a href="https://m.me/ko.phyo.227755" class="btn btn-fb">💬 Messenger</a>
+        <a href="viber://add?number=959777963991" class="btn btn-viber">💜 Viber</a>
+        <a href="https://t.me/heinmezat" class="btn btn-tele">✈️ Telegram</a>
     </div>
 </div>
 
@@ -81,17 +95,20 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Firebase မှ ကားလိုင်းများစာရင်းကို ဆွဲထုတ်ခြင်း
     db.ref('trips').on('value', snap => {
         const data = snap.val();
         let html = '';
         for(let id in data) {
             html += `<div class="bus-item" onclick="showBus('${id}', '${data[id].name}')">
-                <strong>🚌 ${data[id].name}</strong><br>📅 ${data[id].date} | ⏰ ${data[id].time}
+                <strong>🚌 ${data[id].name}</strong><br>
+                <small>📅 ${data[id].date} | ⏰ ${data[id].time}</small>
             </div>`;
         }
         document.getElementById('bus-list').innerHTML = html || '<p style="text-align:center;">ခရီးစဉ်မရှိသေးပါ။</p>';
     });
 
+    // ကားလိုင်းတစ်ခုကို နှိပ်လိုက်လျှင် ခုံဇယားပြရန်
     function showBus(id, name) {
         document.getElementById('home-view').style.display = 'none';
         document.getElementById('booking-view').style.display = 'block';
@@ -101,16 +118,24 @@
             const booked = snap.val() || {};
             const map = document.getElementById('seat-map');
             map.innerHTML = '';
+            
+            // ခုံဇယား Layout (၃ ခုံစီ + နောက်ဆုံး ၄ ခုံ)
             const layout = [['A1','A2','D'],['B1','B2','B3'],['C1','C2','C3'],['D1','D2','D3'],['E1','E2','E3','E4']];
             
             layout.forEach((row, idx) => {
                 const target = (idx === 4) ? document.createElement('div') : map;
                 if(idx === 4) target.className = 'last-row';
+                
                 row.forEach(s => {
                     const div = document.createElement('div');
+                    // ခုံလွတ်လား၊ ရောင်းပြီးသားလား စစ်ဆေးခြင်း
                     div.className = s === 'D' ? 'seat' : `seat ${booked[s] ? 'sold' : ''}`;
                     div.innerText = s === 'D' ? 'Driver' : (booked[s] ? s + " Sold" : s);
-                    if(s !== 'D' && !booked[s]) div.onclick = () => div.classList.toggle('selected');
+                    
+                    // ခုံလွတ်ဖြစ်မှသာ နှိပ်လို့ရမည်
+                    if(s !== 'D' && !booked[s]) {
+                        div.onclick = () => div.classList.toggle('selected');
+                    }
                     target.appendChild(div);
                 });
                 if(idx === 4) map.appendChild(target);
