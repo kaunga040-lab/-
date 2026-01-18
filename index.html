@@ -34,6 +34,9 @@
         .btn-call { background-color: #2e7d32; } .btn-fb { background-color: #1877f2; } .btn-viber { background-color: #7360f2; } .btn-tele { background-color: #0088cc; }
         .note { color: #757575; font-size: 12px; text-align: center; padding: 20px; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
@@ -84,6 +87,64 @@
 </div>
 
 <script>
+    // Firebase Config (admin.html ထဲကအတိုင်း အတူတူပင်ဖြစ်ရမည်)
+    const firebaseConfig = {
+        apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
+        authDomain: "a-gyi-kaung.firebaseapp.com",
+        databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com",
+        projectId: "a-gyi-kaung",
+        storageBucket: "a-gyi-kaung.firebasestorage.app",
+        messagingSenderId: "1002724874482",
+        appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // လက်ရှိ နောက်ဆုံးခရီးစဉ်၏ Data ကို ဖတ်ရန်
+    function listenBookings() {
+        // trips ထဲက နောက်ဆုံးတင်ထားတဲ့ ခရီးစဉ် ID ကို ယူမည်
+        db.ref('trips').limitToLast(1).on('value', snap => {
+            const trips = snap.val();
+            if (!trips) return;
+            
+            const tripId = Object.keys(trips)[0];
+            const tripName = trips[tripId].name;
+            document.getElementById('bus1-title').innerText = "🚌 " + tripName;
+
+            // ထို tripId အတွက် ရောင်းပြီးသားခုံများကို စစ်မည်
+            db.ref('bookings/' + tripId).on('value', bookSnap => {
+                const booked = bookSnap.val() || {};
+                updateSeatUI(booked);
+            });
+        });
+    }
+
+    function updateSeatUI(booked) {
+        const allSeats = document.querySelectorAll('.seat');
+        allSeats.forEach(seat => {
+            const seatName = seat.innerText.trim();
+            if (booked[seatName]) {
+                // ရောင်းပြီးသားခုံဖြစ်ပါက
+                seat.style.backgroundColor = "#f44336"; // အနီရောင် (သို့) မီးခိုးရောင်
+                seat.style.borderColor = "#b71c1c";
+                seat.style.color = "white";
+                seat.style.cursor = "not-allowed";
+                seat.onclick = null; // နှိပ်လို့မရအောင်လုပ်ခြင်း
+                seat.innerText = seatName + " (Sold)";
+            } else {
+                // ကျန်ရှိသေးသောခုံဖြစ်ပါက (မူလပုံစံအတိုင်း ပြန်ထားခြင်း)
+                seat.style.backgroundColor = "#ffffff";
+                seat.style.borderColor = "#3498db";
+                seat.style.color = "black";
+                seat.style.cursor = "pointer";
+                seat.innerText = seatName;
+                seat.onclick = function() { selectSeat(this); };
+            }
+        });
+    }
+
+    // နိုင်ငံတကာ ဘာသာစကားပြောင်းခြင်း Function
     const data = {
         my: { title: "အကြီးကောင် ကားဂိတ်", subTitle: "မဲဇာ မှ မန္တလေး ခရီးစဉ်", welcome: "လူကြီးမင်းတို့၏ ခရီးစဉ်အတွက် စိတ်ချမ်းသာစွာ လိုက်ပါစီးနှင်းနိုင်ရန် ဝန်ဆောင်မှု ပေးလျက်ရှိပါသည်။", online: "ကားလက်မှတ်များကို အွန်လိုင်းမှ မှာယူနိုင်ပါပြီ", bus1: "🚌 အောင်နိုင်သူ / မန်းတိုးတိုး", note: "(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screen Shot ရိုက်ပို့ပေးနိုင်ပါသည်)", contact: "ဆက်သွယ်ရန်", call: "📞 ဖုန်းခေါ်ရန်", msg: "💬 Messenger", viber: "💜 Viber", tele: "✈️ Telegram" },
         en: { title: "A Gyi Kaung Express", subTitle: "Meza - Mandalay Trip", welcome: "We are providing the best service for your comfortable journey.", online: "Book your tickets online now!", bus1: "🚌 Aung Naing Thu / Mann Toe Toe", note: "(Click seat to select and send us a screenshot)", contact: "Contact Us", call: "📞 Call Now", msg: "💬 Messenger", viber: "💜 Viber", tele: "✈️ Telegram" }
@@ -94,7 +155,6 @@
         document.getElementById('sub-title').innerText = data[lang].subTitle;
         document.getElementById('welcome-msg').innerText = data[lang].welcome;
         document.getElementById('online-booking').innerText = data[lang].online;
-        document.getElementById('bus1-title').innerText = data[lang].bus1;
         document.getElementById('instruction').innerText = data[lang].note;
         document.getElementById('contact-title').innerText = data[lang].contact;
         document.getElementById('btn-call').innerText = data[lang].call;
@@ -104,6 +164,10 @@
     }
 
     function selectSeat(el) { el.classList.toggle('selected'); }
+
+    // Page စဖွင့်သည်နှင့် Database ကို နားထောင်မည်
+    listenBookings();
 </script>
+
 </body>
 </html>
