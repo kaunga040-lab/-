@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGK Staff - Access Control</title>
+    <title>AGK Staff - POS Ready</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -26,10 +26,22 @@
         #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; }
         .modal-content { background:white; width:90%; max-width: 400px; margin:10% auto; padding:20px; border-radius:12px; }
 
+        /* POS PRINTER STYLES */
+        #printable-voucher { display: none; }
         @media print {
             body * { visibility: hidden; }
             #printable-voucher, #printable-voucher * { visibility: visible; }
-            #printable-voucher { position: fixed; left: 0; top: 0; width: 58mm; display: block !important; }
+            #printable-voucher { 
+                position: fixed; left: 0; top: 0; width: 100%; 
+                display: block !important; padding: 0; margin: 0;
+            }
+            .v-box { 
+                width: 100%; max-width: 58mm; /* Thermal paper width */
+                text-align: center; font-size: 13px; line-height: 1.4;
+                padding: 5px; border: none;
+            }
+            hr { border-top: 1px dotted #000; margin: 5px 0; }
+            @page { margin: 0; }
         }
     </style>
 </head>
@@ -38,7 +50,7 @@
 <div class="container">
     <div id="login-screen" style="padding: 100px 20px; text-align: center;">
         <h2 style="color: var(--primary);">AGK System Login</h2>
-        <input type="email" id="login-email" placeholder="Email (staff@agk.com)">
+        <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
         <button class="btn" style="background: var(--primary);" onclick="login()">ဝင်ရောက်ရန်</button>
     </div>
@@ -84,18 +96,23 @@
     </div>
 </div>
 
-<div id="printable-voucher" style="display:none; text-align:center;">
-    <h3>A GYI KAUNG</h3>
-    <hr>
-    <div style="text-align:left; padding:10px; font-size:14px;">
-        Voucher: <span id="v-id"></span><br>
-        ကား: <span id="v-bus"></span><br>
-        ခုံ: <span id="v-seat"></span><br>
-        အမည်: <span id="v-name"></span><br>
-        ဖုန်း: <span id="v-phone"></span><br>
-        ရောင်းသူ: <span id="v-staff"></span>
+<div id="printable-voucher">
+    <div class="v-box">
+        <h3 style="margin:0;">A GYI KAUNG</h3>
+        <p style="margin:2px 0;">Bus Ticket Voucher</p>
+        <hr>
+        <div style="text-align:left; padding: 0 5px;">
+            Voucher: <b id="v-id"></b><br>
+            ကား: <span id="v-bus"></span><br>
+            ခုံအမှတ်: <b style="font-size: 16px;" id="v-seat"></b><br>
+            အမည်: <span id="v-name"></span><br>
+            ဖုန်း: <span id="v-phone"></span><br>
+            စီးမည့်နေရာ: <span id="v-pickup"></span><br>
+            ရောင်းသူ: <span id="v-staff"></span>
+        </div>
+        <hr>
+        <p style="font-size: 10px;">ကျေးဇူးတင်ပါသည်</p>
     </div>
-    <hr>
 </div>
 
 <script>
@@ -111,7 +128,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    let currentTripId = null, selectedSeat = null, currentUserEmail = "", userNick = "";
+    let currentTripId = null, selectedSeat = null, currentUserEmail = "", userNick = "", currentBusName = "";
 
     function login() {
         auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value)
@@ -187,16 +204,12 @@
     function openModal(s, data) {
         selectedSeat = s;
         document.getElementById('seat-label').innerText = "ခုံအမှတ်: " + s;
-        
-        // Permission Check: Admin သို့မဟုတ် ရောင်းသူကိုယ်တိုင်လား?
         const canEdit = (!data) || (currentUserEmail === 'admin@agk.com') || (data.soldBy === userNick);
-        
         const fields = ['c-name', 'c-phone', 'c-nrc', 'c-pickup'];
         fields.forEach(f => {
             document.getElementById(f).value = data ? (data[f.split('-')[1]] || '') : '';
             document.getElementById(f).disabled = !canEdit;
         });
-
         document.getElementById('sold-by-info').innerText = data ? "ရောင်းသူ: " + data.soldBy : "";
         
         let btns = '';
@@ -208,7 +221,7 @@
                 btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">အချက်အလက်ပြင်မည်</button>`;
             }
             if(currentUserEmail === 'admin@agk.com') {
-                btns += `<button class="btn" style="background:var(--danger); margin-top:5px;" onclick="deleteBooking()">လက်မှတ်ဖျက်မည် (Admin Only)</button>`;
+                btns += `<button class="btn" style="background:var(--danger); margin-top:5px;" onclick="deleteBooking()">လက်မှတ်ဖျက်မည်</button>`;
             }
         }
         document.getElementById('modal-btns').innerHTML = btns;
@@ -219,27 +232,28 @@
         const name = document.getElementById('c-name').value;
         const phone = document.getElementById('c-phone').value;
         if(!name || !phone) return alert("အမည်နှင့်ဖုန်း ဖြည့်ပါ");
-        
         let prefix = currentBusName.includes("အောင်နိုင်သူ") ? "ANT" : "AGK";
-        // update သုံးခြင်းဖြင့် ရောင်းသူနာမည်ကို မူလအတိုင်း ထိန်းသိမ်းထားနိုင်သည်
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
             name, phone, nrc: document.getElementById('c-nrc').value,
             pickup: document.getElementById('c-pickup').value,
             voucherId: `${prefix}.${selectedSeat}`,
-            soldBy: userNick // ရောင်းသူနာမည်ကို မှတ်သားသည်
+            soldBy: userNick
         }).then(() => closeModal());
     }
 
     function printVoucher() {
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
             const d = snap.val();
-            document.getElementById('v-id').innerText = d.voucherId;
-            document.getElementById('v-bus').innerText = currentBusName;
-            document.getElementById('v-seat').innerText = selectedSeat;
-            document.getElementById('v-name').innerText = d.name;
-            document.getElementById('v-phone').innerText = d.phone;
-            document.getElementById('v-staff').innerText = d.soldBy;
-            window.print();
+            if(!d) return alert("Error: No Data");
+            document.getElementById('v-id').innerText = d.voucherId || "-";
+            document.getElementById('v-bus').innerText = currentBusName || "-";
+            document.getElementById('v-seat').innerText = selectedSeat || "-";
+            document.getElementById('v-name').innerText = d.name || "-";
+            document.getElementById('v-phone').innerText = d.phone || "-";
+            document.getElementById('v-pickup').innerText = d.pickup || "ဂိတ်";
+            document.getElementById('v-staff').innerText = d.soldBy || "-";
+            
+            setTimeout(() => { window.print(); }, 500);
         });
     }
 
