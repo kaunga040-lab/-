@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGK System - Full & Print Ready</title>
+    <title>AGK System - Final Admin Version</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -13,9 +13,8 @@
         .container { max-width: 500px; margin: auto; background: white; min-height: 100vh; padding-bottom: 50px; }
         header { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
         .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        input:disabled, select:disabled { background: #eee; color: #777; cursor: not-allowed; }
-        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; }
         
         /* Bus Layout */
         .bus-layout { background: #263238; padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
@@ -29,17 +28,17 @@
         .modal-content { background:white; width:90%; max-width: 400px; margin:5% auto; padding:20px; border-radius:12px; }
 
         /* Report Modal */
-        #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; color: white; overflow-y: auto; padding: 20px; box-sizing: border-box; }
+        #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; color: white; overflow-y: auto; padding: 20px; }
 
-        /* PRINT LOGIC - Screen ပေါ်မှာ ဖျောက်ထားရန် */
+        /* PRINT STYLES - Screen ပေါ်မှာ ဖျောက်ထားရန် */
         #printable-voucher { position: absolute; left: -9999px; top: -9999px; }
 
         @media print {
-            body * { visibility: hidden; } /* အကုန်ဖျောက် */
-            #printable-voucher, #printable-voucher * { visibility: visible; } /* Voucher ပဲပြ */
+            body * { visibility: hidden; }
+            #printable-voucher, #printable-voucher * { visibility: visible; }
             #printable-voucher { position: fixed; left: 0; top: 0; width: 100%; display: block !important; }
-            .v-box { width: 100%; max-width: 58mm; text-align: center; font-size: 13px; padding: 5px; line-height: 1.5; color: black; }
-            hr { border-top: 1px dotted #000; }
+            .v-box { width: 58mm; margin: 0 auto; text-align: center; font-size: 12px; line-height: 1.4; color: black; padding: 10px; }
+            hr { border-top: 1px dotted #000; margin: 5px 0; }
             @page { margin: 0; }
         }
     </style>
@@ -57,15 +56,15 @@
     <div id="app-screen" style="display: none;">
         <header>
             <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 4px 8px;">Logout</button>
-            <h3 style="margin:0;">AGK System</h3>
-            <div id="user-display" style="font-size: 11px;"></div>
+            <h3 style="margin:0;">AGK Ticketing</h3>
+            <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
         </header>
 
         <div id="admin-only-section" class="section" style="display: none; background: #e8f5e9;">
-            <h4>➕ Admin Panel</h4>
+            <h4>➕ Admin Control Panel</h4>
             <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 နေ့စဉ်အရောင်းရီပို့ကြည့်ရန်</button>
             <hr>
-            <input type="text" id="bus-name" placeholder="ကားနာမည်">
+            <input type="text" id="bus-name" placeholder="ကားနာမည် (ဥပမာ- အောင်နိုင်သူ)">
             <input type="date" id="bus-date">
             <input type="time" id="bus-time">
             <button class="btn" style="background: var(--secondary);" onclick="createTrip()">ကားလိုင်းသစ်တင်မည်</button>
@@ -96,7 +95,7 @@
             <option value="Unpaid">မပေးရသေး (Unpaid)</option>
         </select>
         <input type="text" id="c-pickup" placeholder="စီးမည့်နေရာ">
-        <div id="sold-by-info" style="font-size: 11px; margin: 5px 0; color: var(--primary);"></div>
+        <p id="sold-by-info" style="font-size: 12px; color: var(--primary); margin: 5px 0;"></p>
         <div id="modal-btns"></div>
         <button class="btn" style="background:#ccc; color:black; margin-top:10px;" onclick="closeModal()">ပိတ်ပါ</button>
     </div>
@@ -105,7 +104,6 @@
 <div id="report-modal">
     <h2 style="text-align: center; color: #4caf50;">Daily Sales Report</h2>
     <p id="report-date" style="text-align: center; opacity: 0.8;"></p>
-    <hr>
     <div id="report-content"></div>
     <button class="btn" style="background: var(--danger); margin-top: 20px;" onclick="document.getElementById('report-modal').style.display='none'">ပိတ်ပါ</button>
 </div>
@@ -113,27 +111,28 @@
 <div id="printable-voucher">
     <div class="v-box">
         <h3 style="margin:0;">A GYI KAUNG</h3>
-        <p style="margin:2px 0;">Ticket Voucher</p>
+        <p style="margin:2px 0;">Bus Ticket Voucher</p>
         <hr>
-        <div style="text-align:left; padding: 0 5px;">
-            Voucher: <b id="v-id"></b><br>
-            Bus: <span id="v-bus"></span><br>
-            Seat: <b style="font-size: 16px;" id="v-seat"></b><br>
-            Name: <span id="v-name"></span><br>
-            Phone: <span id="v-phone"></span><br>
-            Pickup: <span id="v-pickup"></span><br>
-            Pay: <span id="v-method"></span><br>
-            Staff: <span id="v-staff"></span>
+        <div style="text-align:left;">
+            ဘောင်ချာနံပါတ်: <b id="v-id"></b><br>
+            ကားလိုင်း: <span id="v-bus"></span><br>
+            ခုံအမှတ်: <b style="font-size: 16px;" id="v-seat"></b><br>
+            ခရီးသည်: <span id="v-name"></span><br>
+            ဖုန်း: <span id="v-phone"></span><br>
+            စီးမည့်နေရာ: <span id="v-pickup"></span><br>
+            ငွေပေးချေမှု: <span id="v-method"></span><br>
+            ရောင်းသူ: <span id="v-staff"></span>
         </div>
-        <div style="border: 1px solid #000; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 15px;">
+        <div style="border: 1px solid #000; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 14px;">
             Price: <span id="v-price"></span> MMK
         </div>
         <hr>
-        <p style="font-size: 10px;">ကျေးဇူးတင်ပါသည်!</p>
+        <p style="font-size: 10px;">Safe Journey with AGK!</p>
     </div>
 </div>
 
 <script>
+    // Firebase Config (သင်၏ မူရင်း Key များ)
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -149,6 +148,7 @@
     
     let currentTripId = null, selectedSeat = null, currentUserEmail = "", userNick = "", currentBusName = "";
 
+    // Auth Logic
     function login() {
         auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value)
             .catch(err => alert("Login မှားယွင်းနေပါသည်။"));
@@ -161,7 +161,7 @@
             userNick = user.email.split('@')[0].toUpperCase();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-display').innerText = "👤 Staff: " + userNick;
+            document.getElementById('user-display').innerText = "👤 ဝန်ထမ်း: " + userNick;
             if(user.email === 'admin@agk.com') document.getElementById('admin-only-section').style.display = 'block';
             loadTrips();
         } else {
@@ -170,6 +170,7 @@
         }
     });
 
+    // Trip Logic
     function loadTrips() {
         db.ref('trips').on('value', snap => {
             const data = snap.val();
@@ -220,6 +221,7 @@
         });
     }
 
+    // Modal Logic
     function openModal(s, data) {
         selectedSeat = s;
         document.getElementById('seat-label').innerText = "ခုံအမှတ်: " + s;
@@ -230,9 +232,9 @@
         document.getElementById('c-price').value = data ? (data.price || '') : '';
         document.getElementById('c-method').value = data ? (data.method || 'Cash') : 'Cash';
         document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
+        document.getElementById('sold-by-info').innerText = data ? "ရောင်းချသူ: " + (data.soldBy || "မသိပါ") : "";
 
         ['c-name', 'c-phone', 'c-price', 'c-method', 'c-pickup'].forEach(id => document.getElementById(id).disabled = !canEdit);
-        document.getElementById('sold-by-info').innerText = data ? "ရောင်းသူ: " + data.soldBy : "";
         
         let btns = '';
         if(!data) {
@@ -252,44 +254,42 @@
         const price = document.getElementById('c-price').value;
         if(!name || !phone || !price) return alert("အချက်အလက်ပြည့်စုံစွာဖြည့်ပါ");
         
-        let prefix = currentBusName.includes("အောင်နိုင်သူ") ? "ANT" : "AGK";
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
             name, phone, price,
             method: document.getElementById('c-method').value,
             pickup: document.getElementById('c-pickup').value,
-            voucherId: `${prefix}.${selectedSeat}`,
-            soldBy: userNick
+            soldBy: userNick,
+            voucherId: "V" + Date.now().toString().slice(-6)
         }).then(() => closeModal());
     }
 
+    // Print Logic
     function printVoucher() {
-        if (!currentTripId || !selectedSeat) return alert("ခုံရွေးချယ်မှု မှားယွင်းနေပါသည်");
-        
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
             const d = snap.val();
-            if(!d) return alert("ဒေတာ မရှိပါ");
+            if(!d) return;
 
-            document.getElementById('v-id').innerText = d.voucherId || "-";
-            document.getElementById('v-bus').innerText = currentBusName || "-";
-            document.getElementById('v-seat').innerText = selectedSeat || "-";
-            document.getElementById('v-name').innerText = d.name || "-";
-            document.getElementById('v-phone').innerText = d.phone || "-";
+            document.getElementById('v-id').innerText = d.voucherId || "N/A";
+            document.getElementById('v-bus').innerText = currentBusName;
+            document.getElementById('v-seat').innerText = selectedSeat;
+            document.getElementById('v-name').innerText = d.name;
+            document.getElementById('v-phone').innerText = d.phone;
             document.getElementById('v-pickup').innerText = d.pickup || "ဂိတ်";
-            document.getElementById('v-method').innerText = d.method || "Cash";
+            document.getElementById('v-method').innerText = d.method;
             document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
-            document.getElementById('v-staff').innerText = d.soldBy || "-";
+            document.getElementById('v-staff').innerText = d.soldBy || userNick;
             
-            setTimeout(() => { window.print(); }, 500);
+            setTimeout(() => { window.print(); }, 800);
         });
     }
 
+    // Admin Report
     function showReport() {
-        const reportModal = document.getElementById('report-modal');
-        const reportContent = document.getElementById('report-content');
-        const today = new Date().toLocaleDateString();
-        document.getElementById('report-date').innerText = "ရက်စွဲ - " + today;
-        reportContent.innerHTML = "တွက်ချက်နေသည်...";
-        reportModal.style.display = 'block';
+        const modal = document.getElementById('report-modal');
+        const content = document.getElementById('report-content');
+        document.getElementById('report-date').innerText = "ယနေ့ရက်စွဲ - " + new Date().toLocaleDateString();
+        content.innerHTML = "စာရင်းတွက်ချက်နေသည်...";
+        modal.style.display = 'block';
 
         db.ref('bookings').once('value', snap => {
             const all = snap.val() || {};
@@ -297,31 +297,30 @@
 
             for (let tid in all) {
                 for (let sid in all[tid]) {
-                    const d = all[tid][sid];
-                    const p = Number(d.price || 0);
+                    const b = all[tid][sid];
+                    const p = Number(b.price || 0);
                     tTickets++;
-                    if (d.method === 'Cash') tCash += p;
-                    else if (d.method === 'KPay') tKPay += p;
-                    else if (d.method === 'Unpaid') tUnpaid += p;
-                    staffSales[d.soldBy] = (staffSales[d.soldBy] || 0) + p;
+                    if (b.method === 'Cash') tCash += p;
+                    else if (b.method === 'KPay') tKPay += p;
+                    else if (b.method === 'Unpaid') tUnpaid += p;
+                    staffSales[b.soldBy] = (staffSales[b.soldBy] || 0) + p;
                 }
             }
 
-            let sHtml = '<h4>👤 ဝန်ထမ်းအလိုက် အရောင်း</h4>';
+            let sHtml = '<h4>👤 ဝန်ထမ်းအလိုက် ရောင်းအား</h4>';
             for (let s in staffSales) {
-                sHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; border-bottom: 1px solid #555;">
+                sHtml += `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #444;">
                     <span>${s}</span><span>${staffSales[s].toLocaleString()} MMK</span>
                 </div>`;
             }
 
-            reportContent.innerHTML = `
-                <div style="background: #222; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #ffeb3b;">စုစုပေါင်း: ${tTickets} စောင်</h3>
-                    <hr style="border: 0.5px solid #444;">
-                    <p>💵 Cash: <b>${tCash.toLocaleString()}</b></p>
-                    <p>📱 KPay: <b>${tKPay.toLocaleString()}</b></p>
-                    <p style="color: #f44336;">❌ Unpaid: <b>${tUnpaid.toLocaleString()}</b></p>
-                    <h3 style="text-align: right; color: #4caf50;">Net: ${(tCash + tKPay).toLocaleString()} MMK</h3>
+            content.innerHTML = `
+                <div style="background: #222; padding: 15px; border-radius: 10px; margin: 15px 0;">
+                    <p>စုစုပေါင်းလက်မှတ်: <b>${tTickets} စောင်</b></p>
+                    <p>ငွေသား (Cash): <b>${tCash.toLocaleString()} MMK</b></p>
+                    <p>KPay/Wave: <b>${tKPay.toLocaleString()} MMK</b></p>
+                    <p style="color:red;">မပေးရသေး (Unpaid): <b>${tUnpaid.toLocaleString()} MMK</b></p>
+                    <h3 style="color: #4caf50; text-align: right;">Total Received: ${(tCash+tKPay).toLocaleString()}</h3>
                 </div>
                 ${sHtml}`;
         });
