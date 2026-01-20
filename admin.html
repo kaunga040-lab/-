@@ -3,81 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AGK System - Final Admin Version</title>
+    <title>AGK POS System</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #1a237e; --secondary: #2e7d32; --danger: #f44336; }
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; }
-        .container { max-width: 500px; margin: auto; background: white; min-height: 100vh; padding-bottom: 50px; }
-        header { background: var(--primary); color: white; padding: 20px; text-align: center; position: relative; }
+        :root { --primary: #1a237e; --secondary: #2e7d32; }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding-bottom: 50px; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; }
+        .container { max-width: 500px; margin: auto; background: white; min-height: 100vh; }
         .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
-        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; }
-        
-        /* Bus Layout */
-        .bus-layout { background: #263238; padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
-        .seat { background: white; padding: 12px 0; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; }
+        .bus-layout { background: #263238; padding: 20px; border-radius: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 300px; margin: auto; }
+        .seat { background: white; padding: 10px; text-align: center; border-radius: 5px; cursor: pointer; }
         .seat.sold { background: var(--secondary); color: white; }
         .driver { background: #555; color: white; cursor: default; }
-        .last-row { grid-column: span 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
-
-        /* Modal */
-        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; overflow-y: auto; }
-        .modal-content { background:white; width:90%; max-width: 400px; margin:5% auto; padding:20px; border-radius:12px; }
-
-        /* Report Modal */
-        #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; color: white; overflow-y: auto; padding: 20px; }
-
-        /* PRINT STYLES - Screen ပေါ်မှာ ဖျောက်ထားရန် */
-        #printable-voucher { position: absolute; left: -9999px; top: -9999px; }
-
-        @media print {
-            body * { visibility: hidden; }
-            #printable-voucher, #printable-voucher * { visibility: visible; }
-            #printable-voucher { position: fixed; left: 0; top: 0; width: 100%; display: block !important; }
-            .v-box { width: 58mm; margin: 0 auto; text-align: center; font-size: 12px; line-height: 1.4; color: black; padding: 10px; }
-            hr { border-top: 1px dotted #000; margin: 5px 0; }
-            @page { margin: 0; }
-        }
+        #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; }
+        .modal-content { background:white; width:90%; max-width: 350px; margin:15% auto; padding:20px; border-radius:10px; }
+        
+        /* Print အတွက် Screen ပေါ်မှာ လုံးဝဖျောက်ထားမည့်အပိုင်း */
+        #print-area { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="login-screen" style="padding: 100px 20px; text-align: center;">
-        <h2 style="color: var(--primary);">AGK System</h2>
+    <div id="login-screen" style="padding: 50px 20px; text-align: center;">
+        <h2>AGK Ticketing</h2>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="btn" style="background: var(--primary);" onclick="login()">ဝင်ရောက်ရန်</button>
+        <button class="btn" style="background: var(--primary);" onclick="login()">Login</button>
     </div>
 
     <div id="app-screen" style="display: none;">
         <header>
-            <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 4px 8px;">Logout</button>
-            <h3 style="margin:0;">AGK Ticketing</h3>
-            <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
+            <h3 style="margin:0;">AGK System</h3>
+            <button onclick="logout()" style="float:right; margin-top:-20px;">Logout</button>
         </header>
 
-        <div id="admin-only-section" class="section" style="display: none; background: #e8f5e9;">
-            <h4>➕ Admin Control Panel</h4>
-            <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 နေ့စဉ်အရောင်းရီပို့ကြည့်ရန်</button>
-            <hr>
-            <input type="text" id="bus-name" placeholder="ကားနာမည် (ဥပမာ- အောင်နိုင်သူ)">
+        <div id="admin-panel" class="section" style="display:none; background:#e8f5e9;">
+            <button class="btn" style="background:purple;" onclick="showReport()">အရောင်းရီပို့</button>
+            <input type="text" id="bus-name" placeholder="ကားအမည်">
             <input type="date" id="bus-date">
             <input type="time" id="bus-time">
-            <button class="btn" style="background: var(--secondary);" onclick="createTrip()">ကားလိုင်းသစ်တင်မည်</button>
+            <button class="btn" style="background:var(--secondary);" onclick="createTrip()">ကားသစ်တင်မည်</button>
         </div>
 
         <div class="section" id="list-area">
-            <h4>📅 ခရီးစဉ်များ</h4>
+            <h4>ခရီးစဉ်များ</h4>
             <div id="bus-list"></div>
         </div>
 
         <div id="booking-area" class="section" style="display: none;">
-            <button class="btn" style="background:#555; width: auto;" onclick="hideBooking()">← ပြန်ထွက်မည်</button>
-            <h3 id="target-bus-info" style="text-align:center;"></h3>
+            <button onclick="hideBooking()">← Back</button>
+            <h3 id="bus-info" style="text-align:center;"></h3>
             <div id="seat-map" class="bus-layout"></div>
         </div>
     </div>
@@ -85,54 +65,23 @@
 
 <div id="modal">
     <div class="modal-content">
-        <h3 id="seat-label" style="margin:0 0 10px 0;"></h3>
-        <input type="text" id="c-name" placeholder="ခရီးသည်အမည်">
-        <input type="tel" id="c-phone" placeholder="ဖုန်းနံပါတ်">
-        <input type="number" id="c-price" placeholder="လက်မှတ်ခ">
+        <h3 id="seat-label"></h3>
+        <input type="text" id="c-name" placeholder="အမည်">
+        <input type="tel" id="c-phone" placeholder="ဖုန်း">
+        <input type="number" id="c-price" placeholder="ဈေးနှုန်း">
         <select id="c-method">
-            <option value="Cash">ငွေသား (Cash)</option>
-            <option value="KPay">KPay / Wave</option>
-            <option value="Unpaid">မပေးရသေး (Unpaid)</option>
+            <option value="Cash">Cash</option>
+            <option value="KPay">KPay</option>
         </select>
         <input type="text" id="c-pickup" placeholder="စီးမည့်နေရာ">
-        <p id="sold-by-info" style="font-size: 12px; color: var(--primary); margin: 5px 0;"></p>
         <div id="modal-btns"></div>
-        <button class="btn" style="background:#ccc; color:black; margin-top:10px;" onclick="closeModal()">ပိတ်ပါ</button>
+        <button class="btn" style="background:#ccc; color:black;" onclick="closeModal()">ပိတ်ပါ</button>
     </div>
 </div>
 
-<div id="report-modal">
-    <h2 style="text-align: center; color: #4caf50;">Daily Sales Report</h2>
-    <p id="report-date" style="text-align: center; opacity: 0.8;"></p>
-    <div id="report-content"></div>
-    <button class="btn" style="background: var(--danger); margin-top: 20px;" onclick="document.getElementById('report-modal').style.display='none'">ပိတ်ပါ</button>
-</div>
-
-<div id="printable-voucher">
-    <div class="v-box">
-        <h3 style="margin:0;">A GYI KAUNG</h3>
-        <p style="margin:2px 0;">Bus Ticket Voucher</p>
-        <hr>
-        <div style="text-align:left;">
-            ဘောင်ချာနံပါတ်: <b id="v-id"></b><br>
-            ကားလိုင်း: <span id="v-bus"></span><br>
-            ခုံအမှတ်: <b style="font-size: 16px;" id="v-seat"></b><br>
-            ခရီးသည်: <span id="v-name"></span><br>
-            ဖုန်း: <span id="v-phone"></span><br>
-            စီးမည့်နေရာ: <span id="v-pickup"></span><br>
-            ငွေပေးချေမှု: <span id="v-method"></span><br>
-            ရောင်းသူ: <span id="v-staff"></span>
-        </div>
-        <div style="border: 1px solid #000; margin: 10px 0; padding: 5px; font-weight: bold; font-size: 14px;">
-            Price: <span id="v-price"></span> MMK
-        </div>
-        <hr>
-        <p style="font-size: 10px;">Safe Journey with AGK!</p>
-    </div>
-</div>
+<div id="print-area"></div>
 
 <script>
-    // Firebase Config (သင်၏ မူရင်း Key များ)
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -145,24 +94,20 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    
-    let currentTripId = null, selectedSeat = null, currentUserEmail = "", userNick = "", currentBusName = "";
 
-    // Auth Logic
+    let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
+
     function login() {
-        auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value)
-            .catch(err => alert("Login မှားယွင်းနေပါသည်။"));
+        auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value);
     }
     function logout() { auth.signOut(); }
 
     auth.onAuthStateChanged(user => {
         if (user) {
-            currentUserEmail = user.email;
             userNick = user.email.split('@')[0].toUpperCase();
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-display').innerText = "👤 ဝန်ထမ်း: " + userNick;
-            if(user.email === 'admin@agk.com') document.getElementById('admin-only-section').style.display = 'block';
+            if(user.email === 'admin@agk.com') document.getElementById('admin-panel').style.display = 'block';
             loadTrips();
         } else {
             document.getElementById('login-screen').style.display = 'block';
@@ -170,19 +115,15 @@
         }
     });
 
-    // Trip Logic
     function loadTrips() {
         db.ref('trips').on('value', snap => {
-            const data = snap.val();
             let html = '';
-            for(let id in data) {
-                html += `<div class="section" style="background:white; margin-bottom:5px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <div onclick="showBooking('${id}', '${data[id].name}')" style="cursor:pointer; flex-grow:1;">
-                        <strong>🚌 ${data[id].name}</strong><br><small>${data[id].date} | ${data[id].time}</small>
-                    </div>
-                    ${currentUserEmail === 'admin@agk.com' ? `<button onclick="deleteTrip('${id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">ဖျက်</button>` : ''}
+            snap.forEach(child => {
+                const d = child.val();
+                html += `<div class="section" onclick="showBooking('${child.key}', '${d.name}')" style="background:white; cursor:pointer; margin-top:5px; border-radius:8px;">
+                    <strong>${d.name}</strong><br><small>${d.date} | ${d.time}</small>
                 </div>`;
-            }
+            });
             document.getElementById('bus-list').innerHTML = html;
         });
     }
@@ -191,149 +132,108 @@
         currentTripId = id; currentBusName = name;
         document.getElementById('list-area').style.display = 'none';
         document.getElementById('booking-area').style.display = 'block';
-        document.getElementById('target-bus-info').innerText = name;
+        document.getElementById('bus-info').innerText = name;
         renderSeats(id);
     }
 
-    function hideBooking() {
-        document.getElementById('list-area').style.display = 'block';
-        document.getElementById('booking-area').style.display = 'none';
-    }
-
-    function renderSeats(tripId) {
-        db.ref('bookings/' + tripId).on('value', snap => {
+    function renderSeats(id) {
+        db.ref('bookings/' + id).on('value', snap => {
             const booked = snap.val() || {};
             const map = document.getElementById('seat-map');
             map.innerHTML = '';
-            const layout = [['A1', 'A2', 'Driver'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], ['D1', 'D2', 'D3'], ['E1', 'E2', 'E3', 'E4']];
-            layout.forEach((row, idx) => {
-                const rowDiv = document.createElement('div');
-                if(idx === 4) rowDiv.className = 'last-row';
-                row.forEach(s => {
-                    const div = document.createElement('div');
-                    div.className = s === 'Driver' ? 'seat driver' : `seat ${booked[s] ? 'sold' : ''}`;
-                    div.innerText = s;
-                    if(s !== 'Driver') div.onclick = () => openModal(s, booked[s]);
-                    if(idx === 4) rowDiv.appendChild(div); else map.appendChild(div);
-                });
-                if(idx === 4) map.appendChild(rowDiv);
+            const seats = ['A1','A2','Driver','B1','B2','B3','C1','C2','C3','D1','D2','D3','E1','E2','E3','E4'];
+            seats.forEach(s => {
+                const div = document.createElement('div');
+                div.className = s === 'Driver' ? 'seat driver' : `seat ${booked[s] ? 'sold' : ''}`;
+                div.innerText = s;
+                if(s !== 'Driver') div.onclick = () => openModal(s, booked[s]);
+                map.appendChild(div);
             });
         });
     }
 
-    // Modal Logic
     function openModal(s, data) {
         selectedSeat = s;
-        document.getElementById('seat-label').innerText = "ခုံအမှတ်: " + s;
-        const canEdit = (!data) || (currentUserEmail === 'admin@agk.com') || (data.soldBy === userNick);
+        document.getElementById('seat-label').innerText = "Seat: " + s;
+        document.getElementById('c-name').value = data ? data.name : '';
+        document.getElementById('c-phone').value = data ? data.phone : '';
+        document.getElementById('c-price').value = data ? data.price : '';
+        document.getElementById('c-pickup').value = data ? data.pickup : '';
         
-        document.getElementById('c-name').value = data ? (data.name || '') : '';
-        document.getElementById('c-phone').value = data ? (data.phone || '') : '';
-        document.getElementById('c-price').value = data ? (data.price || '') : '';
-        document.getElementById('c-method').value = data ? (data.method || 'Cash') : 'Cash';
-        document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
-        document.getElementById('sold-by-info').innerText = data ? "ရောင်းချသူ: " + (data.soldBy || "မသိပါ") : "";
-
-        ['c-name', 'c-phone', 'c-price', 'c-method', 'c-pickup'].forEach(id => document.getElementById(id).disabled = !canEdit);
-        
-        let btns = '';
-        if(!data) {
-            btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">စာရင်းသွင်းမည်</button>`;
-        } else {
-            btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Voucher ထုတ်ရန်</button>`;
-            if(canEdit) btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">အချက်အလက်ပြင်မည်</button>`;
-            if(currentUserEmail === 'admin@agk.com') btns += `<button class="btn" style="background:var(--danger); margin-top:5px;" onclick="deleteBooking()">လက်မှတ်ဖျက်မည်</button>`;
-        }
+        let btns = `<button class="btn" style="background:var(--secondary);" onclick="save()">စာရင်းသွင်း/ပြင်မည်</button>`;
+        if(data) btns += `<button class="btn" style="background:orange;" onclick="doPrint()">Voucher ထုတ်ရန်</button>`;
         document.getElementById('modal-btns').innerHTML = btns;
         document.getElementById('modal').style.display = 'block';
     }
 
-    function saveBooking() {
-        const name = document.getElementById('c-name').value;
-        const phone = document.getElementById('c-phone').value;
-        const price = document.getElementById('c-price').value;
-        if(!name || !phone || !price) return alert("အချက်အလက်ပြည့်စုံစွာဖြည့်ပါ");
-        
-        db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
-            name, phone, price,
+    function save() {
+        const d = {
+            name: document.getElementById('c-name').value,
+            phone: document.getElementById('c-phone').value,
+            price: document.getElementById('c-price').value,
             method: document.getElementById('c-method').value,
             pickup: document.getElementById('c-pickup').value,
             soldBy: userNick,
-            voucherId: "V" + Date.now().toString().slice(-6)
-        }).then(() => closeModal());
+            voucherId: "AGK" + Date.now().toString().slice(-5)
+        };
+        db.ref(`bookings/${currentTripId}/${selectedSeat}`).set(d).then(() => closeModal());
     }
 
-    // Print Logic
-    function printVoucher() {
+    // 🔥 ပရင့်ထုတ်သည့် ဖန်ရှင် (အသစ်)
+    function doPrint() {
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
             const d = snap.val();
             if(!d) return;
 
-            document.getElementById('v-id').innerText = d.voucherId || "N/A";
-            document.getElementById('v-bus').innerText = currentBusName;
-            document.getElementById('v-seat').innerText = selectedSeat;
-            document.getElementById('v-name').innerText = d.name;
-            document.getElementById('v-phone').innerText = d.phone;
-            document.getElementById('v-pickup').innerText = d.pickup || "ဂိတ်";
-            document.getElementById('v-method').innerText = d.method;
-            document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
-            document.getElementById('v-staff').innerText = d.soldBy || userNick;
-            
-            setTimeout(() => { window.print(); }, 800);
-        });
-    }
+            // ပရင့်ထုတ်မည့် စာသားပုံစံ
+            const printContent = `
+                <html>
+                <head>
+                    <style>
+                        body { width: 58mm; font-family: sans-serif; text-align: center; padding: 0; margin: 0; color: black; }
+                        .line { border-top: 1px dotted black; margin: 5px 0; }
+                        .info { text-align: left; font-size: 13px; margin-left: 5px; }
+                        h3 { margin: 5px 0; }
+                    </style>
+                </head>
+                <body>
+                    <h3>A GYI KAUNG</h3>
+                    <div class="line"></div>
+                    <div class="info">
+                        Voucher: ${d.voucherId}<br>
+                        Bus: ${currentBusName}<br>
+                        Seat: <b>${selectedSeat}</b><br>
+                        Name: ${d.name}<br>
+                        Phone: ${d.phone}<br>
+                        Pickup: ${d.pickup || "-"}<br>
+                        Staff: ${d.soldBy}
+                    </div>
+                    <div class="line"></div>
+                    <div style="font-weight:bold; font-size:16px; margin: 5px 0;">
+                        Total: ${Number(d.price).toLocaleString()} MMK
+                    </div>
+                    <div class="line"></div>
+                    <p style="font-size:11px;">Safe Journey with AGK!</p>
+                    <script>window.onload = function() { window.print(); window.close(); }</script>
+                </body>
+                </html>
+            `;
 
-    // Admin Report
-    function showReport() {
-        const modal = document.getElementById('report-modal');
-        const content = document.getElementById('report-content');
-        document.getElementById('report-date').innerText = "ယနေ့ရက်စွဲ - " + new Date().toLocaleDateString();
-        content.innerHTML = "စာရင်းတွက်ချက်နေသည်...";
-        modal.style.display = 'block';
-
-        db.ref('bookings').once('value', snap => {
-            const all = snap.val() || {};
-            let tTickets = 0, tCash = 0, tKPay = 0, tUnpaid = 0, staffSales = {};
-
-            for (let tid in all) {
-                for (let sid in all[tid]) {
-                    const b = all[tid][sid];
-                    const p = Number(b.price || 0);
-                    tTickets++;
-                    if (b.method === 'Cash') tCash += p;
-                    else if (b.method === 'KPay') tKPay += p;
-                    else if (b.method === 'Unpaid') tUnpaid += p;
-                    staffSales[b.soldBy] = (staffSales[b.soldBy] || 0) + p;
-                }
-            }
-
-            let sHtml = '<h4>👤 ဝန်ထမ်းအလိုက် ရောင်းအား</h4>';
-            for (let s in staffSales) {
-                sHtml += `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #444;">
-                    <span>${s}</span><span>${staffSales[s].toLocaleString()} MMK</span>
-                </div>`;
-            }
-
-            content.innerHTML = `
-                <div style="background: #222; padding: 15px; border-radius: 10px; margin: 15px 0;">
-                    <p>စုစုပေါင်းလက်မှတ်: <b>${tTickets} စောင်</b></p>
-                    <p>ငွေသား (Cash): <b>${tCash.toLocaleString()} MMK</b></p>
-                    <p>KPay/Wave: <b>${tKPay.toLocaleString()} MMK</b></p>
-                    <p style="color:red;">မပေးရသေး (Unpaid): <b>${tUnpaid.toLocaleString()} MMK</b></p>
-                    <h3 style="color: #4caf50; text-align: right;">Total Received: ${(tCash+tKPay).toLocaleString()}</h3>
-                </div>
-                ${sHtml}`;
+            // Window အသစ် (Hidden) တစ်ခုဖွင့်ပြီး ပရင့်ထုတ်ခြင်း
+            const printWin = window.open('', '', 'width=300,height=600');
+            printWin.document.open();
+            printWin.document.write(printContent);
+            printWin.document.close();
         });
     }
 
     function closeModal() { document.getElementById('modal').style.display = 'none'; }
-    function deleteTrip(id) { if(confirm("ခရီးစဉ်ဖျက်မှာလား?")) db.ref('trips/' + id).remove(); }
-    function deleteBooking() { if(confirm("လက်မှတ်ဖျက်မှာလား?")) { db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove(); closeModal(); } }
+    function hideBooking() { document.getElementById('booking-area').style.display = 'none'; document.getElementById('list-area').style.display = 'block'; }
     function createTrip() {
         const name = document.getElementById('bus-name').value;
         const date = document.getElementById('bus-date').value;
         const time = document.getElementById('bus-time').value;
-        if(name && date && time) db.ref('trips/' + Date.now()).set({ name, date, time, id: Date.now() });
+        if(name && date && time) db.ref('trips').push({ name, date, time });
     }
 </script>
 </body>
