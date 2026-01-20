@@ -164,7 +164,7 @@
         document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
         
         let btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">စာရင်းသိမ်းမည်</button>`;
-        if(data) btns += `<button class="btn" style="background:#ff9800; margin-top:5px;" onclick="doPrint()">Voucher ထုတ်ရန်</button>`;
+        if(data) btns += `<button class="btn" style="background:#ff9800; margin-top:5px;" onclick="doPrint()">ဘောင်ချာထုတ်မည်</button>`;
         document.getElementById('modal-btns').innerHTML = btns;
         document.getElementById('modal').style.display = 'block';
     }
@@ -187,6 +187,7 @@
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).set(bookingData).then(() => closeModal());
     }
 
+    // ပြုပြင်ထားသော Print Function (Bluetooth + PDF)
     function doPrint() {
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
             const d = snap.val();
@@ -195,25 +196,50 @@
             const vID = d.voucherId || "N/A";
             const vStaff = d.soldBy || userNick;
 
-            const printContent = `
-                <html><head><title>Print Voucher</title><style>
-                    body { width: 58mm; font-family: sans-serif; text-align: center; color: black; padding: 10px; margin: 0; }
-                    .info { text-align: left; font-size: 13px; margin: 10px 0; line-height: 1.6; }
-                    .total { font-weight: bold; border: 1px solid black; padding: 5px; margin: 10px 0; font-size: 15px; }
-                </style></head><body>
-                    <h3 style="margin:0;">A GYI KAUNG</h3><p style="margin:0; font-size:10px;">Express Ticketing</p><hr>
-                    <div class="info">
-                        ဘောင်ချာ: ${vID}<br>ကား: ${currentBusName}<br>ခုံအမှတ်: <b>${selectedSeat}</b><br>
-                        အမည်: ${d.name}<br>ဖုန်း: ${d.phone}<br>နေရာ: ${d.pickup || "ဂိတ်"}<br>အရောင်း: ${vStaff}
-                    </div>
-                    <div class="total">စုစုပေါင်း: ${Number(d.price).toLocaleString()} MMK</div><hr>
-                    <p style="font-size:10px;">Safe Journey with AGK!</p>
-                    <script>window.onload = function() { window.print(); setTimeout(window.close, 500); }<\/script>
-                </body></html>
-            `;
-            const printWin = window.open('', '', 'width=450,height=600');
-            printWin.document.write(printContent);
-            printWin.document.close();
+            // ၁။ POS Printer (Bluetooth - RawBT) အတွက် Text format
+            const printText = 
+                "      A GYI KAUNG      \n" +
+                "   Express Ticketing   \n" +
+                "-----------------------\n" +
+                "ဘောင်ချာ: " + vID + "\n" +
+                "ကား : " + currentBusName + "\n" +
+                "ခုံအမှတ်: " + selectedSeat + "\n" +
+                "အမည် : " + d.name + "\n" +
+                "ဖုန်း : " + d.phone + "\n" +
+                "နေရာ : " + (d.pickup || "ဂိတ်") + "\n" +
+                "အရောင်း: " + vStaff + "\n" +
+                "-----------------------\n" +
+                "စုစုပေါင်း: " + Number(d.price).toLocaleString() + " MMK\n" +
+                "-----------------------\n" +
+                "  Safe Journey with AGK! \n\n\n";
+
+            const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(printText)));
+
+            // ၂။ အသုံးပြုသူကို ရွေးချယ်ခိုင်းခြင်း
+            if (confirm("Bluetooth Printer ဖြင့် တိုက်ရိုက်ထုတ်မလား?\n(Cancel နှိပ်ပါက PDF သိမ်းရန် Dialog ပွင့်လာပါမည်)")) {
+                window.location.href = rawbtUrl;
+            } else {
+                // Browser Standard Print (PDF သိမ်းရန်)
+                const printContent = `
+                    <html><head><title>Print Voucher</title><style>
+                        body { width: 58mm; font-family: sans-serif; text-align: center; color: black; padding: 10px; margin: 0; }
+                        .info { text-align: left; font-size: 13px; margin: 10px 0; line-height: 1.6; }
+                        .total { font-weight: bold; border: 1px solid black; padding: 5px; margin: 10px 0; font-size: 15px; }
+                    </style></head><body>
+                        <h3 style="margin:0;">A GYI KAUNG</h3><p style="margin:0; font-size:10px;">Express Ticketing</p><hr>
+                        <div class="info">
+                            ဘောင်ချာ: ${vID}<br>ကား: ${currentBusName}<br>ခုံအမှတ်: <b>${selectedSeat}</b><br>
+                            အမည်: ${d.name}<br>ဖုန်း: ${d.phone}<br>နေရာ: ${d.pickup || "ဂိတ်"}<br>အရောင်း: ${vStaff}
+                        </div>
+                        <div class="total">စုစုပေါင်း: ${Number(d.price).toLocaleString()} MMK</div><hr>
+                        <p style="font-size:10px;">Safe Journey with AGK!</p>
+                        <script>window.onload = function() { window.print(); setTimeout(window.close, 500); }<\/script>
+                    </body></html>
+                `;
+                const printWin = window.open('', '', 'width=450,height=600');
+                printWin.document.write(printContent);
+                printWin.document.close();
+            }
         });
     }
 
