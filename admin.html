@@ -3,44 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGK System - Real-time Lock</title>
+    <title>AGK System - Final Professional Version</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         :root { --primary: #1a237e; --secondary: #2e7d32; --danger: #f44336; --dark: #263238; --warning: #ffeb3b; }
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        .container { max-width: 550px; margin: auto; background: white; min-height: 100vh; }
-        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; }
+        .container { max-width: 550px; margin: auto; background: white; min-height: 100vh; padding-bottom: 50px; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: relative; }
         .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
-        input, select { width: 100%; padding: 12px; margin: 5px 0 12px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 15px; }
+        input, select { width: 100%; padding: 12px; margin: 5px 0 12px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; }
         
         /* Bus Layout & Animation */
-        .bus-layout { background: var(--dark); padding: 20px; border-radius: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 350px; margin: 20px auto; }
-        .seat { background: white; padding: 15px 0; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; position: relative; }
-        .seat.sold { background: #ff9800; color: white; }
-        .seat.locked { background: var(--warning); color: #333; animation: pulse 1s infinite; border: 2px solid orange; }
-        .driver { background: #78909c; color: white; cursor: default; }
+        .bus-layout { background: var(--dark); padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
+        .seat { background: white; padding: 12px 0; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .seat.sold { background: var(--secondary); color: white; }
+        .seat.locked { background: var(--warning); color: #000; animation: pulse 1s infinite; border: 2px solid orange; }
+        .driver { background: #555; color: white; cursor: default; }
         .last-row { grid-column: span 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
+            50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
 
-        /* Modal */
+        /* Modals */
         #modal, #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; overflow-y: auto; }
-        .modal-content { background:white; width:90%; max-width: 450px; margin:5% auto; padding:20px; border-radius:12px; }
+        .modal-content { background:white; width:90%; max-width: 400px; margin:5% auto; padding:20px; border-radius:12px; color: #000; }
 
-        /* Print Hidden */
+        /* Print Preview Style */
         #printable-voucher { display: none; }
         @media print {
             body * { visibility: hidden; }
             #printable-voucher, #printable-voucher * { visibility: visible; }
             #printable-voucher { display: block !important; position: fixed; left: 0; top: 0; width: 100%; background: white; }
-            .v-box { width: 75mm; margin: 0 auto; padding: 15px; color: black; text-align: center; }
+            .v-box { width: 58mm; margin: 0 auto; text-align: center; padding: 10px; font-size: 12px; color: #000; line-height: 1.4; }
+            hr { border-top: 1px dotted #000; }
             @page { margin: 0; }
         }
     </style>
@@ -52,34 +53,34 @@
         <h2 style="color: var(--primary);">AGK System</h2>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="btn" style="background: var(--primary);" onclick="login()">Login</button>
+        <button class="btn" style="background: var(--primary);" onclick="login()">ဝင်ရောက်ရန်</button>
     </div>
 
     <div id="app-screen" style="display: none;">
         <header>
-            <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px;">Logout</button>
+            <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 4px 8px;">Logout</button>
             <h3 style="margin:0;">AGK Ticketing</h3>
             <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
         </header>
 
         <div id="admin-only-section" class="section" style="display: none; background: #e8f5e9;">
-            <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 Sales Report</button>
+            <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 နေ့စဉ်အရောင်းရီပို့</button>
             <hr>
             <input type="text" id="bus-name" placeholder="ကားလိုင်းအမည်">
-            <div style="display: flex; gap: 5px;">
+            <div style="display:flex; gap:5px;">
                 <input type="date" id="bus-date">
                 <input type="time" id="bus-time">
             </div>
-            <button class="btn" style="background: var(--secondary);" onclick="createTrip()">ခရီးစဉ်အသစ်တင်မည်</button>
+            <button class="btn" style="background: var(--secondary);" onclick="createTrip()">ခရီးစဉ်သစ်တင်မည်</button>
         </div>
 
         <div class="section" id="list-area">
-            <h4>Schedules / ခရီးစဉ်များ</h4>
+            <h4>📅 ခရီးစဉ်များ</h4>
             <div id="bus-list"></div>
         </div>
 
         <div id="booking-area" class="section" style="display: none;">
-            <button class="btn" style="background:#555; width: auto;" onclick="hideBooking()">← Back</button>
+            <button class="btn" style="background:#555; width: auto;" onclick="hideBooking()">← ပြန်ထွက်မည်</button>
             <h3 id="target-bus-info" style="text-align:center;"></h3>
             <div id="seat-map" class="bus-layout"></div>
         </div>
@@ -89,43 +90,48 @@
 <div id="modal">
     <div class="modal-content">
         <h3 id="seat-label" style="margin:0 0 10px 0; color: var(--primary);"></h3>
-        <label>Name / အမည်</label>
         <input type="text" id="c-name" placeholder="ခရီးသည်အမည်">
-        <label>NRC / မှတ်ပုံတင်</label>
-        <input type="text" id="c-nrc" placeholder="မှတ်ပုံတင်နံပါတ်">
-        <label>Phone / ဖုန်း</label>
+        <input type="text" id="c-nrc" placeholder="မှတ်ပုံတင် (NRC)">
         <input type="tel" id="c-phone" placeholder="ဖုန်းနံပါတ်">
-        <label>Price / ဈေးနှုန်း</label>
-        <input type="number" id="c-price">
-        <label>Method / ငွေပေးချေမှု</label>
+        <input type="number" id="c-price" placeholder="လက်မှတ်ခ">
         <select id="c-method">
-            <option value="Cash">Cash</option>
-            <option value="KPay">KPay</option>
-            <option value="Unpaid">Unpaid</option>
+            <option value="Cash">Cash (ငွေသား)</option>
+            <option value="KPay">KPay / Wave</option>
+            <option value="Unpaid">Unpaid (မရသေး)</option>
         </select>
-        <label>Pickup / စီးမည့်နေရာ</label>
-        <input type="text" id="c-pickup">
-        <p id="sold-by-info" style="font-size: 12px; font-weight: bold;"></p>
+        <input type="text" id="c-pickup" placeholder="စီးမည့်နေရာ">
+        <p id="sold-by-info" style="font-size: 12px; color: blue;"></p>
         <div id="modal-btns"></div>
-        <button class="btn" style="background:#ccc; color:black; margin-top:10px;" onclick="closeModal()">Close / ပိတ်ပါ</button>
+        <button class="btn" style="background:#ccc; color:black; margin-top:10px;" onclick="closeModal()">ပိတ်ပါ</button>
     </div>
 </div>
 
-<div id="report-modal">...</div>
+<div id="report-modal">
+    <div class="modal-content" style="background: #fff;">
+        <h2 style="text-align: center; color: var(--secondary);">Daily Sales Report</h2>
+        <div id="report-content"></div>
+        <button class="btn" style="background: var(--danger); margin-top: 20px;" onclick="document.getElementById('report-modal').style.display='none'">ပိတ်ပါ</button>
+    </div>
+</div>
+
 <div id="printable-voucher">
     <div class="v-box">
-        <h2 style="margin:0;">A GYI KAUNG</h2>
-        <div id="v-data" style="text-align: left; font-size: 14px; margin-top:10px;">
-            Voucher: <b id="v-id"></b><br>
+        <h3 style="margin:0;">A GYI KAUNG</h3>
+        <p>Bus Ticket Voucher</p>
+        <hr>
+        <div style="text-align:left;">
+            Voucher No: <b id="v-id"></b><br>
             Trip: <span id="v-bus"></span><br>
-            Seat: <b id="v-seat" style="font-size:20px;"></b><br>
+            Seat: <b id="v-seat" style="font-size:16px;"></b><br>
             Name: <span id="v-name"></span><br>
             NRC: <span id="v-nrc"></span><br>
             Phone: <span id="v-phone"></span><br>
             Pickup: <span id="v-pickup"></span><br>
-            Staff: <span id="v-staff"></span><br>
-            Price: <b id="v-price"></b> MMK
+            Price: <b id="v-price"></b> MMK<br>
+            Staff: <span id="v-staff"></span>
         </div>
+        <hr>
+        <p style="font-size:10px;">Safe Journey with AGK!</p>
     </div>
 </div>
 
@@ -144,9 +150,12 @@
     const db = firebase.database();
     
     let currentTripId = null, selectedSeat = null, currentUserEmail = "", userNick = "", currentBusName = "";
-    let activeLocks = {}; 
 
-    function login() { auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value); }
+    // Auth
+    function login() {
+        auth.signInWithEmailAndPassword(document.getElementById('login-email').value, document.getElementById('login-pass').value)
+            .catch(err => alert("အကောင့်ဝင်ရန် မှားယွင်းနေပါသည်။"));
+    }
     function logout() { auth.signOut(); }
 
     auth.onAuthStateChanged(user => {
@@ -169,10 +178,11 @@
             const data = snap.val();
             let html = '';
             for(let id in data) {
-                html += `<div class="section" style="background:white; border-radius:10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border:1px solid #ddd;">
+                html += `<div class="section" style="background:white; margin-bottom:5px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
                     <div onclick="showBooking('${id}', '${data[id].name}')" style="cursor:pointer; flex-grow:1;">
                         <strong>🚌 ${data[id].name}</strong><br><small>${data[id].date} | ${data[id].time}</small>
                     </div>
+                    ${currentUserEmail === 'admin@agk.com' ? `<button onclick="deleteTrip('${id}')" style="background:red; color:white; border:none; padding:5px 10px; border-radius:5px;">ဖျက်</button>` : ''}
                 </div>`;
             }
             document.getElementById('bus-list').innerHTML = html;
@@ -188,13 +198,13 @@
     }
 
     function hideBooking() {
+        if(selectedSeat) releaseLock();
         document.getElementById('list-area').style.display = 'block';
         document.getElementById('booking-area').style.display = 'none';
-        if(selectedSeat) releaseLock();
     }
 
+    // Real-time Rendering (Bookings + Locks)
     function renderSeats(tripId) {
-        // Listen to Bookings & Active Sessions (Locks)
         db.ref(`bookings/${tripId}`).on('value', bSnap => {
             const booked = bSnap.val() || {};
             db.ref(`active_sessions/${tripId}`).on('value', lSnap => {
@@ -217,7 +227,7 @@
                         if(s !== 'Driver') {
                             div.onclick = () => {
                                 if(isLocked) {
-                                    alert(`⚠️ ခဏစောင့်ပါ! ဤခုံကို ဝန်ထမ်း [ ${locks[s].user} ] မှ ဝင်ရောက်ရောင်းချနေပါသည်။`);
+                                    alert(`⚠️ ဝန်ထမ်း [ ${locks[s].user} ] က ဤခုံကို ဝင်ရောက်ရောင်းချနေပါသည်။`);
                                 } else {
                                     openModal(s, isSold);
                                 }
@@ -233,8 +243,8 @@
 
     function openModal(s, data) {
         selectedSeat = s;
-        // Lock the seat in Firebase
-        db.ref(`active_sessions/${currentTripId}/${s}`).set({ user: userNick, time: Date.now() });
+        // Lock the seat
+        db.ref(`active_sessions/${currentTripId}/${s}`).set({ user: userNick });
 
         document.getElementById('seat-label').innerText = "Seat / ခုံ: " + s;
         const canEdit = (!data) || (currentUserEmail === 'admin@agk.com') || (data.soldBy === userNick);
@@ -247,12 +257,15 @@
         document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
         document.getElementById('sold-by-info').innerText = data ? "ရောင်းချသူ: " + (data.soldBy || "-") : "";
 
+        ['c-name', 'c-nrc', 'c-phone', 'c-price', 'c-method', 'c-pickup'].forEach(id => document.getElementById(id).disabled = !canEdit);
+        
         let btns = '';
         if(!data) {
-            btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save / စာရင်းသွင်းမည်</button>`;
+            btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">စာရင်းသွင်းမည်</button>`;
         } else {
-            btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print / ပရင့်ထုတ်ရန်</button>`;
-            if(canEdit) btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update / ပြင်ဆင်မည်</button>`;
+            btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Voucher ထုတ်ရန်</button>`;
+            if(canEdit) btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">ပြင်ဆင်မည်</button>`;
+            if(currentUserEmail === 'admin@agk.com') btns += `<button class="btn" style="background:var(--danger); margin-top:5px;" onclick="deleteBooking()">ဖျက်မည်</button>`;
         }
         document.getElementById('modal-btns').innerHTML = btns;
         document.getElementById('modal').style.display = 'block';
@@ -284,10 +297,12 @@
         document.getElementById('modal').style.display = 'none';
     }
 
+    // Print Function (Voucher)
     function printVoucher() {
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
             const d = snap.val();
-            document.getElementById('v-id').innerText = d.voucherId;
+            if(!d) return;
+            document.getElementById('v-id').innerText = d.voucherId || "N/A";
             document.getElementById('v-bus').innerText = currentBusName;
             document.getElementById('v-seat').innerText = selectedSeat;
             document.getElementById('v-name').innerText = d.name;
@@ -295,12 +310,43 @@
             document.getElementById('v-phone').innerText = d.phone;
             document.getElementById('v-pickup').innerText = d.pickup || "ဂိတ်";
             document.getElementById('v-staff').innerText = d.soldBy;
-            document.getElementById('v-price').innerText = d.price;
+            document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
+            
             setTimeout(() => { window.print(); }, 500);
         });
     }
 
-    // Admin scripts (Create Trip/Delete) remain same as original...
+    // Report Function
+    function showReport() {
+        db.ref('bookings').once('value', snap => {
+            const all = snap.val() || {};
+            let tTickets = 0, tCash = 0, tKPay = 0, tUnpaid = 0;
+            for(let tid in all) {
+                for(let sid in all[tid]) {
+                    const b = all[tid][sid];
+                    const p = Number(b.price || 0);
+                    tTickets++;
+                    if(b.method === 'Cash') tCash += p;
+                    else if(b.method === 'KPay') tKPay += p;
+                    else tUnpaid += p;
+                }
+            }
+            document.getElementById('report-content').innerHTML = `
+                <div style="background:#f0f2f5; padding:15px; border-radius:10px;">
+                    <p>စုစုပေါင်း: ${tTickets} စောင်</p>
+                    <p>Cash: ${tCash.toLocaleString()} MMK</p>
+                    <p>KPay: ${tKPay.toLocaleString()} MMK</p>
+                    <p style="color:red;">မရသေး: ${tUnpaid.toLocaleString()} MMK</p>
+                    <hr>
+                    <h3>Total: ${(tCash+tKPay).toLocaleString()} MMK</h3>
+                </div>`;
+            document.getElementById('report-modal').style.display = 'block';
+        });
+    }
+
+    // Admin Tools
+    function deleteTrip(id) { if(confirm("ဖျက်မှာလား?")) db.ref('trips/' + id).remove(); }
+    function deleteBooking() { if(confirm("လက်မှတ်ဖျက်မှာလား?")) { db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove(); closeModal(); } }
     function createTrip() {
         const name = document.getElementById('bus-name').value;
         const date = document.getElementById('bus-date').value;
@@ -309,5 +355,5 @@
     }
 </script>
 </body>
-                </html>
-                        
+    </html>
+    
