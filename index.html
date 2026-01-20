@@ -12,27 +12,64 @@
     <style>
         :root { --primary: #1a237e; --secondary: #2e7d32; --accent: #fbc02d; --bg: #f8f9fa; }
         body { font-family: sans-serif; background-color: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 600px; width: 95%; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding-bottom: 40px; margin: 0 auto; }
-        header { background: linear-gradient(135deg, var(--primary), #3949ab); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; position: relative; }
+        .container { max-width: 600px; width: 100%; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding-bottom: 80px; margin: 0 auto; position: relative; }
         
-        /* Bus List Styling */
-        .bus-item { background: white; border: 2px solid #ddd; border-radius: 15px; padding: 15px; margin: 10px 20px; cursor: pointer; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .bus-item:hover { border-color: var(--primary); background: #f0f2ff; }
+        header { background: linear-gradient(135deg, var(--primary), #3949ab); color: white; padding: 30px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+        
+        /* Bus List Grid Layout - ပြင်ဆင်ထားသောနေရာ */
+        #bus-list { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; /* ကော်လံ ၂ ခု ခွဲခြင်း */
+            gap: 12px; 
+            padding: 15px; 
+        }
+
+        .bus-item { 
+            background: white; 
+            border: 1px solid #eee; 
+            border-radius: 12px; 
+            padding: 15px; 
+            text-align: center;
+            cursor: pointer; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 100px;
+        }
+        .bus-item:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .bus-name { color: var(--primary); font-weight: bold; font-size: 15px; margin-bottom: 5px; }
+        .bus-info { font-size: 12px; color: #666; }
+
+        /* Floating Staff Button - အောက်ခြေရှိ လူပုံ Logo ခလုတ် */
+        .staff-fab {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-decoration: none;
+            z-index: 1000;
+            font-size: 24px;
+        }
 
         /* Bus Layout */
         .bus-container { background-color: #263238; padding: 25px 15px; border-radius: 45px 45px 15px 15px; border: 6px solid #1a1a1a; margin: 20px auto; width: auto; max-width: 320px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .seat { background-color: #ffffff; border: 2px solid #3498db; padding: 12px 0; text-align: center; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; }
         .seat.sold { background-color: #f44336; border-color: #b71c1c; color: white; cursor: not-allowed; }
         
-        /* Shake Animation */
         @keyframes shake { 0% {transform: rotate(0)} 25% {transform: rotate(3deg)} 50% {transform: rotate(-3deg)} 100% {transform: rotate(0)} }
         .seat.selected { background-color: var(--accent); border-color: #f57f17; animation: shake 0.3s infinite; }
 
         .last-row { grid-column: span 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
-
-        /* Staff Login Area */
-        .staff-login-area { padding: 20px; text-align: center; border-top: 1px dashed #ddd; margin-top: 30px; }
-        .btn-staff { display: inline-block; background: var(--primary); color: white; padding: 12px 25px; border-radius: 30px; text-decoration: none; font-weight: bold; font-size: 14px; box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3); }
 
         /* Contact Buttons */
         .contact-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px; margin-top: 15px; }
@@ -49,40 +86,41 @@
 
 <div class="container">
     <header>
-        <h1>အကြီးကောင် ကားဂိတ်</h1>
-        <p>မဲဇာ မှ မန္တလေး ခရီးစဉ်</p>
+        <h1 style="margin:0; font-size: 24px;">အကြီးကောင် ကားဂိတ်</h1>
+        <p style="margin:10px 0 0; opacity: 0.9;">မဲဇာ မှ မန္တလေး ခရီးစဉ်</p>
     </header>
 
     <div id="home-view">
         <div style="text-align: center; padding: 20px;">
-           <h3>အကြီး‌ေကာင် မှကြိုဆိုပါတယ်</h3>
-           <img src="myphoto.jpg" alt="ကားပုံ" style="width: 100%; max-width: 500px; border-radius: 10px; margin-bottom: 15px;">
-           <p><b>လက်ရှိထွက်ခွာမည့် ကားလိုင်းများ</b></p>
+           <img src="myphoto.jpg" alt="ကားပုံ" style="width: 100%; max-width: 500px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+           <p style="margin-top: 20px; font-weight: bold; color: var(--primary);">လက်ရှိထွက်ခွာမည့် ကားလိုင်းများ</p>
         </div>
+        
         <div id="bus-list"></div>
+
+        <h3 style="text-align: center; margin-top: 30px; font-size: 16px;">ဆက်သွယ်ရန်</h3>
+        <div class="contact-group">
+            <a href="tel:+959777963991" class="btn btn-call">📞 Call</a>
+            <a href="https://m.me/ko.phyo.227755" class="btn btn-fb">💬 Messanger</a>
+            <a href="viber://add?number=959777963991" class="btn btn-viber">💜 Viber</a>
+            <a href="https://t.me/heinmezat" class="btn btn-tele">✈️ Telegram</a>
+        </div>
     </div>
 
     <div id="booking-view" style="display: none; padding: 20px;">
-        <button onclick="location.reload()" style="padding: 10px; border-radius: 10px; border: 1px solid #ccc; background: #eee; cursor: pointer; margin-bottom: 20px;">← ရှေ့သို့ပြန်သွားရန်</button>
+        <button onclick="location.reload()" style="padding: 10px 20px; border-radius: 20px; border: none; background: #eee; cursor: pointer; margin-bottom: 20px; font-weight: bold;">← ပြန်ထွက်မည်</button>
         <h3 id="sel-bus-title" style="text-align: center; color: var(--primary);"></h3>
         <div id="seat-map" class="bus-container"></div>
-        <p style="text-align: center; font-size: 12px; color: #757575;">(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screenshot ရိုက်ပို့ပေးပါ)</p>
+        <p style="text-align: center; font-size: 12px; color: #757575; background: #fffde7; padding: 10px; border-radius: 10px;">(ခုံနံပါတ်ကိုနှိပ်၍ အရောင်ပြောင်းပြီး Screenshot ရိုက်ပို့ပေးပါ)</p>
     </div>
 
-    <div class="staff-login-area">
-        <a href="admin.html" class="btn-staff">🎟️ လက်မှတ်ရောင်းရန် (Staff Only)</a>
-    </div>
-
-    <h3 style="text-align: center; margin-top: 30px;">ဆက်သွယ်ရန်</h3>
-    <div class="contact-group">
-        <a href="tel:+959777963991" class="btn btn-call">📞 ဖုန်းခေါ်ရန်</a>
-        <a href="https://m.me/ko.phyo.227755" class="btn btn-fb">💬 Messenger</a>
-        <a href="viber://add?number=959777963991" class="btn btn-viber">💜 Viber</a>
-        <a href="https://t.me/heinmezat" class="btn btn-tele">✈️ Telegram</a>
-    </div>
+    <a href="admin.html" class="staff-fab" title="Staff Login">
+        👤
+    </a>
 </div>
 
 <script>
+    // သင်၏ Firebase Config ကို ဒီမှာ ပြန်ထည့်ပါ
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -95,31 +133,34 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Firebase မှ ကားလိုင်းများစာရင်းကို ဆွဲထုတ်ခြင်း
     db.ref('trips').on('value', snap => {
         const data = snap.val();
         let html = '';
         for(let id in data) {
-            html += `<div class="bus-item" onclick="showBus('${id}', '${data[id].name}')">
-                <strong>🚌 ${data[id].name}</strong><br>
-                <small>📅 ${data[id].date} | ⏰ ${data[id].time}</small>
+            html += `
+            <div class="bus-item" onclick="showBus('${id}', '${data[id].name}')">
+                <div class="bus-name">🚌 ${data[id].name}</div>
+                <div class="bus-info">
+                    📅 ${data[id].date}<br>
+                    ⏰ ${data[id].time}
+                </div>
             </div>`;
         }
-        document.getElementById('bus-list').innerHTML = html || '<p style="text-align:center;">ခရီးစဉ်မရှိသေးပါ။</p>';
+        document.getElementById('bus-list').innerHTML = html || '<p style="grid-column: span 2; text-align:center;">ခရီးစဉ်မရှိသေးပါ။</p>';
     });
 
-    // ကားလိုင်းတစ်ခုကို နှိပ်လိုက်လျှင် ခုံဇယားပြရန်
     function showBus(id, name) {
         document.getElementById('home-view').style.display = 'none';
         document.getElementById('booking-view').style.display = 'block';
         document.getElementById('sel-bus-title').innerText = "🚌 " + name;
+        // အောက်ခြေခလုတ်ကို ခဏဖျောက်ထားချင်ရင်
+        document.querySelector('.staff-fab').style.display = 'none';
         
         db.ref('bookings/' + id).on('value', snap => {
             const booked = snap.val() || {};
             const map = document.getElementById('seat-map');
             map.innerHTML = '';
             
-            // ခုံဇယား Layout (၃ ခုံစီ + နောက်ဆုံး ၄ ခုံ)
             const layout = [['A1','A2','D'],['B1','B2','B3'],['C1','C2','C3'],['D1','D2','D3'],['E1','E2','E3','E4']];
             
             layout.forEach((row, idx) => {
@@ -128,11 +169,9 @@
                 
                 row.forEach(s => {
                     const div = document.createElement('div');
-                    // ခုံလွတ်လား၊ ရောင်းပြီးသားလား စစ်ဆေးခြင်း
                     div.className = s === 'D' ? 'seat' : `seat ${booked[s] ? 'sold' : ''}`;
-                    div.innerText = s === 'D' ? 'Driver' : (booked[s] ? s + " Sold" : s);
+                    div.innerText = s === 'D' ? 'Driver' : (booked[s] ? "Sold" : s);
                     
-                    // ခုံလွတ်ဖြစ်မှသာ နှိပ်လို့ရမည်
                     if(s !== 'D' && !booked[s]) {
                         div.onclick = () => div.classList.toggle('selected');
                     }
