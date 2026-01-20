@@ -130,6 +130,7 @@
             Seat: <b id="v-seat" style="font-size: 22px;"></b><br>
             Name: <span id="v-name"></span><br>
             Phone: <span id="v-phone"></span><br>
+            Pickup: <span id="v-pickup"></span><br>
             Price: <span id="v-price"></span> MMK<br>
             Staff: <span id="v-staff"></span>
         </div>
@@ -139,7 +140,6 @@
 </div>
 
 <script>
-    // Firebase Config & Global Variables
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -155,7 +155,7 @@
 
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
-    // --- Login Logic (Fixed) ---
+    // --- Login ---
     document.getElementById('loginBtn').addEventListener('click', () => {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
@@ -178,7 +178,7 @@
         }
     });
 
-    // --- Trips & Booking ---
+    // --- Trips ---
     function loadTrips() {
         db.ref('trips').on('value', snap => {
             const data = snap.val();
@@ -265,7 +265,7 @@
 
     function releaseLock() { if(selectedSeat && currentTripId) db.ref(`active_sessions/${currentTripId}/${selectedSeat}`).remove(); }
     function closeModal() { releaseLock(); document.getElementById('modal').style.display = 'none'; }
-    function deleteBooking() { if(confirm("ဤလက်မှတ်ကို ဖျက်မှာ သေချာပါသလား?")) { db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove(); closeModal(); } }
+    function deleteBooking() { if(confirm("ဖျက်မှာလား?")) { db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove(); closeModal(); } }
 
     function printVoucher() {
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
@@ -275,13 +275,14 @@
             document.getElementById('v-seat').innerText = selectedSeat;
             document.getElementById('v-name').innerText = d.name;
             document.getElementById('v-phone').innerText = d.phone;
+            document.getElementById('v-pickup').innerText = d.pickup || "-";
             document.getElementById('v-staff').innerText = d.soldBy;
             document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
             setTimeout(() => { window.print(); }, 500);
         });
     }
 
-    // --- Report Setting Logic (New Features) ---
+    // --- Reports ---
     function toggleSettings() {
         const menu = document.getElementById('settings-menu');
         menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
@@ -313,20 +314,18 @@
     }
 
     function deleteAllData() {
-        if(confirm("သတိပေးချက်: စနစ်အတွင်းရှိ အရောင်းမှတ်တမ်း အားလုံးကို ဖျက်ပါမည်။ စိတ်ချပါသလား?")) {
-            db.ref('bookings').remove().then(() => { alert("ဒေတာအားလုံးကို ရှင်းလင်းပြီးပါပြီ"); closeReport(); });
-        }
+        if(confirm("အားလုံးဖျက်မှာလား?")) db.ref('bookings').remove().then(() => closeReport());
     }
 
     function deleteSelectedBuses() {
         const selectedBuses = Array.from(document.querySelectorAll('.bus-checkbox:checked')).map(cb => cb.value);
-        if(confirm(`ရွေးချယ်ထားသော (${selectedBuses.length}) လိုင်းစာရင်းကို ဖျက်မှာ သေချာပါသလား?`)) {
+        if(confirm("ရွေးထားသည်များ ဖျက်မှာလား?")) {
             db.ref('bookings').once('value', snap => {
                 const all = snap.val() || {};
                 for(let tid in all) for(let sid in all[tid]) {
-                    if(selectedBuses.includes(all[tid][sid].busName || "Unknown Bus")) db.ref(`bookings/${tid}/${sid}`).remove();
+                    if(selectedBuses.includes(all[tid][sid].busName)) db.ref(`bookings/${tid}/${sid}`).remove();
                 }
-                alert("ရွေးချယ်ထားသော စာရင်းများ ဖျက်ပြီးပါပြီ"); closeReport();
+                closeReport();
             });
         }
     }
@@ -352,28 +351,4 @@
             </div>`;
             for(let bus in stats) {
                 html += `<div style="border:1px solid #eee; padding:12px; border-radius:10px; margin-bottom:12px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b style="color:var(--secondary); font-size: 15px;">🚌 ${bus}</b>
-                        <span style="font-size:13px; color:#666;">(${stats[bus].count} ခုံ)</span>
-                    </div>
-                    <div style="font-size:13px; color:#444; margin-top:8px;">
-                        ရောင်းရငွေ: <b>${stats[bus].sum.toLocaleString()}</b> MMK<br>`;
-                for(let st in stats[bus].byStaff) {
-                    html += `<small style="color:#777;">• ${st}: ${stats[bus].byStaff[st]} ခုံ</small><br>`;
-                }
-                html += `</div></div>`;
-            }
-            document.getElementById('report-content').innerHTML = html || "<p style='text-align:center; color:#999;'>မှတ်တမ်းမရှိသေးပါ။</p>";
-            document.getElementById('report-modal').style.display = 'block';
-        });
-    }
-
-    function createTrip() {
-        const name = document.getElementById('bus-name').value, date = document.getElementById('bus-date').value, time = document.getElementById('bus-time').value;
-        if(name && date) db.ref('trips/' + Date.now()).set({ name, date, time });
-    }
-    
-    function toggleLang() { console.log("Language Toggled"); }
-</script>
-</body>
-</html>
+               
