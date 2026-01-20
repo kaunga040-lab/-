@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGK System - All-in-One Stable Version</title>
+    <title>AGK System - Standard Stable Version</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -14,10 +14,8 @@
         header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top:0; z-index:100; }
         .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
         input, select { width: 100%; padding: 12px; margin: 5px 0 12px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
+        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; }
         
-        /* Bus Layout */
         .bus-layout { background: var(--dark); padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
         .seat { background: white; padding: 12px 0; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .seat.sold { background: var(--secondary); color: white; }
@@ -27,18 +25,15 @@
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* Modals */
-        #modal, #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; overflow-y: auto; padding-top: 20px; }
-        .modal-content { background:white; width:92%; max-width: 450px; margin: auto; padding:20px; border-radius:15px; color: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        #modal, #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; overflow-y: auto; }
+        .modal-content { background:white; width:92%; max-width: 450px; margin: 20px auto; padding:20px; border-radius:15px; color: #000; }
 
-        /* Print Area - CSS Stable */
         #printable-voucher { display: none; }
         @media print {
             body * { visibility: hidden; }
             #printable-voucher, #printable-voucher * { visibility: visible; }
-            #printable-voucher { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
-            .v-box { width: 75mm; margin: 0 auto; padding: 20px; font-size: 14px; text-align: center; color: black; border: none; }
-            .no-print { display: none !important; }
+            #printable-voucher { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+            .v-box { width: 75mm; margin: 0 auto; padding: 20px; font-size: 16px; text-align: center; color: black; line-height: 1.5; }
         }
     </style>
 </head>
@@ -49,37 +44,35 @@
         <h2 style="color: var(--primary);">AGK System</h2>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="btn" style="background: var(--primary);" onclick="login()">Login / ဝင်ရောက်ရန်</button>
+        <button class="btn" style="background: var(--primary);" id="loginBtn">Login / ဝင်ရောက်ရန်</button>
     </div>
 
     <div id="app-screen" style="display: none;">
         <header>
-            <button onclick="toggleLang()" style="position: absolute; left: 10px; top: 15px; background: #fff; color: var(--primary); border: none; border-radius: 5px; padding: 5px 10px; font-size: 12px; font-weight: bold;">MM/EN</button>
+            <button onclick="toggleLang()" style="position: absolute; left: 10px; top: 15px; background: #fff; color: var(--primary); border: none; border-radius: 5px; padding: 5px 10px; font-weight: bold; font-size: 12px;">MM/EN</button>
             <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px 10px;">Logout</button>
             <h3 style="margin:0;">AGK Ticketing</h3>
             <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
         </header>
 
         <div id="admin-only-section" class="section" style="display: none; background: #e8f5e9;">
-            <button class="btn" style="background: #673ab7;" onclick="showReport()">
-                📊 <span class="lang-mm">အရောင်းရီပို့ကြည့်ရန်</span><span class="lang-en" style="display:none;">View Sales Report</span>
-            </button>
+            <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 <span class="lang-mm">အရောင်းရီပို့</span><span class="lang-en" style="display:none;">Report</span></button>
             <hr>
-            <input type="text" id="bus-name" placeholder="ကားလိုင်းအမည် (Bus Name)">
+            <input type="text" id="bus-name" placeholder="ကားလိုင်းအမည်">
             <div style="display:flex; gap:5px;">
                 <input type="date" id="bus-date">
                 <input type="time" id="bus-time">
             </div>
-            <button class="btn" style="background: var(--secondary);" onclick="createTrip()">Create Trip / ခရီးစဉ်အသစ်တင်မည်</button>
+            <button class="btn" style="background: var(--secondary);" onclick="createTrip()">Create Trip</button>
         </div>
 
         <div class="section" id="list-area">
-            <h4>📅 <span class="lang-mm">ခရီးစဉ်များ</span><span class="lang-en" style="display:none;">Schedules</span></h4>
+            <h4>📅 <span class="lang-mm">ခရီးစဉ်များ</span><span class="lang-en" style="display:none;">Trips</span></h4>
             <div id="bus-list"></div>
         </div>
 
         <div id="booking-area" class="section" style="display: none;">
-            <button class="btn" style="background:#555; width: auto;" onclick="hideBooking()">← Back / ပြန်ထွက်မည်</button>
+            <button class="btn" style="background:#555; width: auto;" onclick="hideBooking()">← Back</button>
             <h3 id="target-bus-info" style="text-align:center;"></h3>
             <div id="seat-map" class="bus-layout"></div>
         </div>
@@ -88,57 +81,47 @@
 
 <div id="modal">
     <div class="modal-content">
-        <h3 id="seat-label" style="margin:0 0 10px 0; color: var(--primary); text-align: center;"></h3>
-        <label class="lang-mm">ခရီးသည်အမည်</label><label class="lang-en" style="display:none;">Customer Name</label>
+        <h3 id="seat-label" style="text-align:center; color: var(--primary);"></h3>
         <input type="text" id="c-name" placeholder="Name">
-        <label class="lang-mm">မှတ်ပုံတင် (NRC)</label><label class="lang-en" style="display:none;">NRC Number</label>
         <input type="text" id="c-nrc" placeholder="NRC">
-        <label class="lang-mm">ဖုန်းနံပါတ်</label><label class="lang-en" style="display:none;">Phone Number</label>
         <input type="tel" id="c-phone" placeholder="Phone">
-        <label class="lang-mm">လက်မှတ်ခ</label><label class="lang-en" style="display:none;">Price</label>
         <input type="number" id="c-price" placeholder="Price">
-        <label class="lang-mm">ငွေပေးချေမှု</label><label class="lang-en" style="display:none;">Payment Method</label>
         <select id="c-method">
             <option value="Cash">Cash</option>
-            <option value="KPay">KPay / Wave</option>
-            <option value="Unpaid">Unpaid (မပေးရသေး)</option>
+            <option value="KPay">KPay</option>
+            <option value="Unpaid">Unpaid</option>
         </select>
-        <label class="lang-mm">စီးမည့်နေရာ</label><label class="lang-en" style="display:none;">Pickup Point</label>
-        <input type="text" id="c-pickup" placeholder="Pickup">
-        
-        <p id="sold-by-info" style="font-size: 13px; color: blue; font-weight: bold; margin: 10px 0;"></p>
-        
+        <input type="text" id="c-pickup" placeholder="Pickup Point">
+        <p id="sold-by-info" style="color: blue; font-size: 12px; font-weight: bold;"></p>
         <div id="modal-btns"></div>
-        <button class="btn" style="background:#888; margin-top:10px;" onclick="closeModal()">Close / ပိတ်ပါ</button>
+        <button class="btn" style="background:#888; margin-top:10px;" onclick="closeModal()">Close</button>
     </div>
 </div>
 
 <div id="report-modal">
-    <div class="modal-content" style="max-width: 500px;">
-        <h3 style="text-align: center; color: var(--secondary); border-bottom: 2px solid #eee; padding-bottom: 10px;">📊 Sales Summary</h3>
-        <div id="report-content" style="max-height: 400px; overflow-y: auto;"></div>
-        <button class="btn" style="background: var(--danger); margin-top: 20px;" onclick="document.getElementById('report-modal').style.display='none'">ပိတ်ပါ (Close)</button>
+    <div class="modal-content">
+        <h3 style="text-align: center;">📊 Daily Report</h3>
+        <div id="report-content"></div>
+        <button class="btn" style="background: var(--danger); margin-top: 15px;" onclick="document.getElementById('report-modal').style.display='none'">ပိတ်ပါ</button>
     </div>
 </div>
 
 <div id="printable-voucher">
     <div class="v-box">
         <h2 style="margin:0;">A GYI KAUNG</h2>
-        <p style="margin:5px 0;">Express Bus Ticket</p>
         <hr style="border: 1px dashed #000;">
-        <div style="text-align:left; line-height: 1.8; font-size: 16px;">
-            <b>Voucher:</b> <span id="v-id"></span><br>
-            <b>Trip:</b> <span id="v-bus"></span><br>
-            <b>Seat:</b> <span id="v-seat" style="font-size: 22px; text-decoration: underline;"></span><br>
-            <b>Name:</b> <span id="v-name"></span><br>
-            <b>NRC:</b> <span id="v-nrc"></span><br>
-            <b>Phone:</b> <span id="v-phone"></span><br>
-            <b>Pickup:</b> <span id="v-pickup"></span><br>
-            <b>Price:</b> <span id="v-price"></span> MMK<br>
-            <b>Staff:</b> <span id="v-staff"></span>
+        <div style="text-align:left;">
+            Voucher: <b id="v-id"></b><br>
+            Trip: <span id="v-bus"></span><br>
+            Seat: <b id="v-seat" style="font-size:22px;"></b><br>
+            Name: <span id="v-name"></span><br>
+            Phone: <span id="v-phone"></span><br>
+            Pickup: <span id="v-pickup"></span><br>
+            Price: <span id="v-price"></span> MMK<br>
+            Staff: <span id="v-staff"></span>
         </div>
         <hr style="border: 1px dashed #000;">
-        <p style="font-size: 12px;">Safe Journey with AGK Express!</p>
+        <p>Safe Journey!</p>
     </div>
 </div>
 
@@ -155,20 +138,15 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
-    
+
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "", currentLang = "mm";
 
-    function toggleLang() {
-        currentLang = (currentLang === "mm") ? "en" : "mm";
-        document.querySelectorAll('.lang-mm').forEach(el => el.style.display = (currentLang === 'mm' ? 'inline' : 'none'));
-        document.querySelectorAll('.lang-en').forEach(el => el.style.display = (currentLang === 'en' ? 'inline' : 'none'));
-    }
-
-    function login() {
+    // --- Login Fix ---
+    document.getElementById('loginBtn').addEventListener('click', () => {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
-        auth.signInWithEmailAndPassword(email, pass).catch(err => alert("Login Error!"));
-    }
+        auth.signInWithEmailAndPassword(email, pass).catch(err => alert("အမှား: " + err.message));
+    });
 
     function logout() { auth.signOut(); }
 
@@ -186,15 +164,20 @@
         }
     });
 
+    function toggleLang() {
+        currentLang = (currentLang === "mm") ? "en" : "mm";
+        document.querySelectorAll('.lang-mm').forEach(el => el.style.display = (currentLang === 'mm' ? 'inline' : 'none'));
+        document.querySelectorAll('.lang-en').forEach(el => el.style.display = (currentLang === 'en' ? 'inline' : 'none'));
+    }
+
     function loadTrips() {
         db.ref('trips').on('value', snap => {
             const data = snap.val();
             let html = '';
             for(let id in data) {
-                html += `<div class="section" style="background:white; margin-bottom:8px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; border:1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid #ddd;">
                     <div onclick="showBooking('${id}', '${data[id].name}')" style="cursor:pointer; flex-grow:1;">
-                        <strong style="color:var(--primary);">🚌 ${data[id].name}</strong><br>
-                        <small style="color:#666;">${data[id].date} | ${data[id].time}</small>
+                        <strong>🚌 ${data[id].name}</strong><br><small>${data[id].date} | ${data[id].time}</small>
                     </div>
                 </div>`;
             }
@@ -223,7 +206,6 @@
                 const locks = lSnap.val() || {};
                 const map = document.getElementById('seat-map'); map.innerHTML = '';
                 const layout = [['A1', 'A2', 'Driver'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], ['D1', 'D2', 'D3'], ['E1', 'E2', 'E3', 'E4']];
-                
                 layout.forEach((row, idx) => {
                     const rowDiv = document.createElement('div');
                     if(idx === 4) rowDiv.className = 'last-row';
@@ -235,7 +217,7 @@
                         div.innerText = s;
                         if(s !== 'Driver') {
                             div.onclick = () => {
-                                if(isLocked) alert(`⚠️ ဝန်ထမ်း [ ${locks[s].user} ] က ဤခုံကို ဝင်ရောက်ရောင်းချနေပါသည်။`);
+                                if(isLocked) alert("⚠️ ဝန်ထမ်း " + locks[s].user + " လက်ရှိရောင်းချနေသည်");
                                 else openModal(s, isSold);
                             };
                         }
@@ -250,25 +232,22 @@
     function openModal(s, data) {
         selectedSeat = s;
         db.ref(`active_sessions/${currentTripId}/${s}`).set({ user: userNick });
-        document.getElementById('seat-label').innerText = "Seat / ခုံ: " + s;
-        
+        document.getElementById('seat-label').innerText = "Seat: " + s;
         document.getElementById('c-name').value = data ? (data.name || '') : '';
         document.getElementById('c-nrc').value = data ? (data.nrc || '') : '';
         document.getElementById('c-phone').value = data ? (data.phone || '') : '';
         document.getElementById('c-price').value = data ? (data.price || '') : '';
         document.getElementById('c-method').value = data ? (data.method || 'Cash') : 'Cash';
         document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
-        document.getElementById('sold-by-info').innerText = data ? "ရောင်းချသူ: " + (data.soldBy || "-") : "";
+        document.getElementById('sold-by-info').innerText = data ? "Sold By: " + (data.soldBy || "-") : "";
 
         let btns = '';
         if(!data) {
-            btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save / သိမ်းဆည်းမည်</button>`;
+            btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save</button>`;
         } else {
-            btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print / ဘောင်ချာထုတ်ရန်</button>`;
-            btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update / ပြင်ဆင်မည်</button>`;
-            if(auth.currentUser.email === 'admin@agk.com') {
-                btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete / ဖျက်မည်</button>`;
-            }
+            btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print</button>`;
+            btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update</button>`;
+            if(auth.currentUser.email === 'admin@agk.com') btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete</button>`;
         }
         document.getElementById('modal-btns').innerHTML = btns;
         document.getElementById('modal').style.display = 'block';
@@ -278,15 +257,13 @@
         const name = document.getElementById('c-name').value;
         const phone = document.getElementById('c-phone').value;
         const price = document.getElementById('c-price').value;
-        if(!name || !phone || !price) return alert("အချက်အလက်များကို ပြည့်စုံအောင်ဖြည့်ပါ။");
-        
+        if(!name || !phone || !price) return alert("အမည်၊ ဖုန်း၊ စျေးနှုန်း ဖြည့်ပါ");
+
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
-            name, phone, price,
-            nrc: document.getElementById('c-nrc').value,
+            name, phone, price, nrc: document.getElementById('c-nrc').value,
             method: document.getElementById('c-method').value,
             pickup: document.getElementById('c-pickup').value,
-            soldBy: userNick,
-            busName: currentBusName,
+            soldBy: userNick, busName: currentBusName,
             voucherId: "V" + Date.now().toString().slice(-6)
         }).then(() => closeModal());
     }
@@ -299,16 +276,14 @@
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
             const d = snap.val();
             if(!d) return;
-            document.getElementById('v-id').innerText = d.voucherId || "N/A";
+            document.getElementById('v-id').innerText = d.voucherId;
             document.getElementById('v-bus').innerText = currentBusName;
             document.getElementById('v-seat').innerText = selectedSeat;
             document.getElementById('v-name').innerText = d.name;
-            document.getElementById('v-nrc').innerText = d.nrc || "-";
             document.getElementById('v-phone').innerText = d.phone;
             document.getElementById('v-pickup').innerText = d.pickup || "-";
             document.getElementById('v-staff').innerText = d.soldBy;
             document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
-            
             setTimeout(() => { window.print(); }, 500);
         });
     }
@@ -316,46 +291,42 @@
     function showReport() {
         db.ref('bookings').once('value', snap => {
             const all = snap.val() || {};
-            let stats = {}, tCash = 0, tKPay = 0, tUnpaid = 0, tTickets = 0;
-
+            let stats = {}, tCash = 0, tKPay = 0, tUnpaid = 0, total = 0;
             for(let tid in all) {
                 for(let sid in all[tid]) {
                     const b = all[tid][sid];
                     const p = Number(b.price || 0);
-                    const bName = b.busName || "Unknown Bus";
+                    const bus = b.busName || "Unknown Bus";
                     const staff = b.soldBy || "Unknown";
-
-                    if(!stats[bName]) stats[bName] = { count: 0, sum: 0, byStaff: {} };
-                    stats[bName].count++;
-                    stats[bName].sum += p;
-                    stats[bName].byStaff[staff] = (stats[bName].byStaff[staff] || 0) + 1;
-
-                    tTickets++;
-                    if(b.method === 'Cash') tCash += p;
-                    else if(b.method === 'KPay') tKPay += p;
-                    else tUnpaid += p;
+                    if(!stats[bus]) stats[bus] = { count: 0, sum: 0, byStaff: {} };
+                    stats[bus].count++;
+                    stats[bus].sum += p;
+                    stats[bus].byStaff[staff] = (stats[bus].byStaff[staff] || 0) + 1;
+                    if(b.method === 'Cash') tCash += p; else if(b.method === 'KPay') tKPay += p; else tUnpaid += p;
                 }
             }
-
-            let html = `<div style="padding:15px; background:#f0f7f0; border-radius:10px; margin-bottom:15px;">
-                <b>စုစုပေါင်း:</b> ${tTickets} စောင် / <b>${(tCash+tKPay).toLocaleString()}</b> MMK<br>
-                <span style="color:green;">ငွေသား: ${tCash.toLocaleString()}</span> | <span style="color:blue;">KPay: ${tKPay.toLocaleString()}</span><br>
-                <span style="color:red;">မရသေး: ${tUnpaid.toLocaleString()}</span>
+            let html = `<div style="background:#f0f7f0; padding:10px; border-radius:10px; margin-bottom:10px;">
+                Cash: ${tCash.toLocaleString()} | KPay: ${tKPay.toLocaleString()} | Unpaid: ${tUnpaid.toLocaleString()}
             </div>`;
-
             for(let bus in stats) {
-                html += `<div style="margin-bottom:15px; border:1px solid #ddd; padding:10px; border-radius:10px;">
-                    <b style="color:var(--primary); font-size:16px;">🚌 ${bus}</b><br>
-                    ရောင်းရငွေ: <b>${stats[bus].sum.toLocaleString()}</b> MMK (${stats[bus].count} ခုံ)<br>
-                    <div style="margin-top:5px; padding-left:10px; border-left:3px solid #ccc; font-size:13px;">`;
+                html += `<div style="border:1px solid #ddd; padding:10px; border-radius:10px; margin-bottom:10px;">
+                    <b>🚌 ${bus}</b> (${stats[bus].count} ခုံ) - ${stats[bus].sum.toLocaleString()} MMK<br>`;
                 for(let st in stats[bus].byStaff) {
-                    html += `• ${st} မှ (<b>${stats[bus].byStaff[st]}</b>) ခုံ ရောင်းထားသည်။<br>`;
+                    html += `<small>• ${st}: ${stats[bus].byStaff[st]} ခုံ ရောင်းထားသည်</small><br>`;
                 }
-                html += `</div></div>`;
+                html += `</div>`;
             }
-            document.getElementById('report-content').innerHTML = html || "အရောင်းမှတ်တမ်းမရှိသေးပါ။";
+            document.getElementById('report-content').innerHTML = html || "မှတ်တမ်းမရှိပါ။";
             document.getElementById('report-modal').style.display = 'block';
         });
     }
 
-    fu
+    function createTrip() {
+        const name = document.getElementById('bus-name').value;
+        const date = document.getElementById('bus-date').value;
+        const time = document.getElementById('bus-time').value;
+        if(name && date) db.ref('trips/' + Date.now()).set({ name, date, time });
+    }
+</script>
+</body>
+</html>
