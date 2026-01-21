@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGK System - Login Fixed</title>
+    <title>AGK System - Trip Management</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -98,8 +98,7 @@
         <button onclick="toggleSettings()" style="position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 20px;">⚙️</button>
         <h3 style="text-align: center;">📊 Daily Report</h3>
         <div id="settings-menu" style="display:none; background: #fff3f3; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
-            <button class="btn" style="background: var(--danger); font-size: 12px;" onclick="deleteAllData()">ဖျက်မည်</button>
-            <div id="bus-delete-list"></div>
+            <button class="btn" style="background: var(--danger); font-size: 12px;" onclick="deleteAllData()">အရောင်းမှတ်တမ်းများအားလုံးဖျက်မည်</button>
         </div>
         <div id="report-content"></div>
         <button class="btn" style="background: var(--danger); margin-top: 15px;" onclick="closeReport()">ပိတ်ပါ</button>
@@ -121,6 +120,7 @@
 </div>
 
 <script>
+    // Firebase Config (မူရင်းအတိုင်း)
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -137,21 +137,12 @@
 
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
-    // LOGIN FUNCTION (Explicitly Global)
     window.login = function() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
         const errDisplay = document.getElementById('login-error');
-        
-        if(!email || !pass) {
-            errDisplay.innerText = "Email နှင့် Password ဖြည့်ပါ";
-            return;
-        }
-
-        auth.signInWithEmailAndPassword(email, pass)
-            .catch(error => {
-                errDisplay.innerText = "အမှား: " + error.message;
-            });
+        if(!email || !pass) { errDisplay.innerText = "Email နှင့် Password ဖြည့်ပါ"; return; }
+        auth.signInWithEmailAndPassword(email, pass).catch(error => { errDisplay.innerText = "အမှား: " + error.message; });
     };
 
     window.logout = function() { auth.signOut(); };
@@ -170,19 +161,35 @@
         }
     });
 
+    // loadTrips function ထဲတွင် Admin အတွက် Delete Button ပေါ်ရန် ပြုပြင်ထားခြင်း
     function loadTrips() {
         db.ref('trips').on('value', snap => {
             const data = snap.val();
             let html = '';
+            const isAdmin = auth.currentUser && auth.currentUser.email === 'admin@agk.com';
+            
             for(let id in data) {
-                html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:12px; border:1px solid #eee; padding: 15px; cursor:pointer;" onclick="showBooking('${id}', '${data[id].name}')">
-                    <strong>🚌 ${data[id].name}</strong><br><small>${data[id].date}</small>
+                html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:12px; border:1px solid #eee; padding: 15px; position: relative;">
+                    <div onclick="showBooking('${id}', '${data[id].name}')" style="cursor:pointer; padding-right: 80px;">
+                        <strong>🚌 ${data[id].name}</strong><br><small>${data[id].date}</small>
+                    </div>
+                    ${isAdmin ? `<button onclick="deleteTrip('${id}', '${data[id].name}')" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); background:var(--danger); color:white; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; font-size:12px;">ဖျက်မည်</button>` : ''}
                 </div>`;
             }
-            document.getElementById('bus-list').innerHTML = html;
+            document.getElementById('bus-list').innerHTML = html || '<p style="text-align:center; color:#888;">ခရီးစဉ်မရှိပါ။</p>';
         });
     }
 
+    // ခရီးစဉ်ဖျက်ရန် function အသစ်
+    function deleteTrip(tripId, tripName) {
+        if (confirm(`⚠️ သတိပေးချက်: "${tripName}" ခရီးစဉ်နှင့် အရောင်းမှတ်တမ်းများအားလုံးကို ဖျက်ရန် သေချာပါသလား?`)) {
+            db.ref(`trips/${tripId}`).remove();
+            db.ref(`bookings/${tripId}`).remove();
+            db.ref(`active_sessions/${tripId}`).remove();
+        }
+    }
+
+    // ကျန်သည့် Function များ (မူရင်းအတိုင်း မပြောင်းလဲပါ)
     function showBooking(id, name) {
         currentTripId = id; currentBusName = name;
         document.getElementById('list-area').style.display = 'none';
@@ -227,7 +234,6 @@
         document.getElementById('c-method').value = data ? (data.method || 'Cash') : 'Cash';
         document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
         document.getElementById('sold-by-info').innerText = data ? "Sold By: " + (data.soldBy || "-") : "";
-
         let btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save</button>`;
         if(data) {
             btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print</button>`;
@@ -285,12 +291,8 @@
         const n = document.getElementById('bus-name').value, d = document.getElementById('bus-date').value;
         if(n && d) db.ref('trips/' + Date.now()).set({ name: n, date: d });
     }
-
     function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
-    function toggleSettings() { 
-        const m = document.getElementById('settings-menu');
-        m.style.display = m.style.display === 'none' ? 'block' : 'none';
-    }
+    function toggleSettings() { const m = document.getElementById('settings-menu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
     function deleteAllData() { if(confirm("အားလုံးဖျက်မှာလား?")) db.ref('bookings').remove().then(() => closeReport()); }
 </script>
 </body>
