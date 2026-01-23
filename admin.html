@@ -14,6 +14,7 @@
         header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top:0; z-index:100; }
         .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
         input, select { width: 100%; padding: 12px; margin: 5px 0 12px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input:disabled { background: #eee; cursor: not-allowed; }
         .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
         .bus-layout { background: var(--dark); padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
@@ -79,8 +80,7 @@
     <div class="modal-content">
         <h3 id="seat-label" style="text-align: center;"></h3>
         <input type="text" id="c-name" placeholder="အမည်">
-
-        <input type="text" id="c-name" placeholder="မှတ်ပုံတင်">     
+        <input type="text" id="c-nrc" placeholder="မှတ်ပုံတင်">     
         <input type="tel" id="c-phone" placeholder="ဖုန်း">
         <input type="number" id="c-price" placeholder="လက်မှတ်ခ">
         <select id="c-method">
@@ -89,7 +89,7 @@
             <option value="Unpaid">Unpaid</option>
         </select>
         <input type="text" id="c-pickup" placeholder="စီးမည့်နေရာ">
-        <p id="sold-by-info" style="font-size: 13px; color: blue; font-weight: bold;"></p>
+        <p id="sold-by-info" style="font-size: 13px; color: blue; font-weight: bold; text-align: center;"></p>
         <div id="modal-btns"></div>
         <button class="btn" style="background:#888; margin-top:10px;" onclick="closeModal()">Close</button>
     </div>
@@ -122,7 +122,8 @@
 </div>
 
 <script>
-    // Firebase Config (မူရင်းအတိုင်း)
+    const deviceId = navigator.userAgent.replace(/\s+/g, '').slice(0, 30) + (window.screen.width + window.screen.height);
+
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -139,19 +140,60 @@
 
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
+    // Device Lock Logic ပါဝင်သော Login Function
     window.login = function() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
         const errDisplay = document.getElementById('login-error');
         if(!email || !pass) { errDisplay.innerText = "Email နှင့် Password ဖြည့်ပါ"; return; }
-        auth.signInWithEmailAndPassword(email, pass).catch(error => { errDisplay.innerText = "အမှား: " + error.message; });
+
+        auth.signInWithEmailAndPassword(email, pass).then(userCredential => {
+            const user = userCredential.user;
+            const userRef = db.ref('user_sessions/' + user.uid);
+            userRef.once('value', snap => {
+                const session = snap.val();
+                if (!session || session.currentDevice === deviceId) {
+                    userRef.update({ currentDevice: deviceId, status: 'approved' });
+                } else {
+                    userRef.update({ requestDevice: deviceId, status: 'pending', requestUser: email.split('@')[0].toUpperCase() });
+                    errDisplay.innerText = "အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...";
+                    userRef.on('value', sSnap => {
+                        if (sSnap.val().status === 'approved' && sSnap.val().currentDevice === deviceId) location.reload();
+                    });
+                }
+            });
+        }).catch(error => { errDisplay.innerText = "အမှား: " + error.message; });
     };
 
-    window.logout = function() { auth.signOut(); };
+    window.logout = function() { 
+        const user = auth.currentUser;
+        if(user) db.ref('user_sessions/' + user.uid).remove().then(() => auth.signOut());
+        else auth.signOut();
+    };
 
     auth.onAuthStateChanged(user => {
         if (user) {
             userNick = user.email.split('@')[0].toUpperCase();
+            
+            // Device Approval Watcher
+            const userRef = db.ref('user_sessions/' + user.uid);
+            userRef.on('value', snap => {
+                const data = snap.val();
+                if (data) {
+                    if (data.status === 'pending' && data.currentDevice === deviceId) {
+                        if (confirm(`ဝန်ထမ်း ${data.requestUser} မှ အခြားစက်ဖြင့် ဝင်ရန် ကြိုးစားနေသည်။ ခွင့်ပြုမလား?`)) {
+                            userRef.update({ currentDevice: data.requestDevice, status: 'approved', requestDevice: null });
+                        } else {
+                            userRef.update({ status: 'approved', requestDevice: null });
+                        }
+                    }
+                    if (data.currentDevice !== deviceId) {
+                        auth.signOut();
+                        alert("သင့်အကောင့်ကို အခြားစက်တစ်ခုတွင် အသုံးပြုလိုက်ပါပြီ။");
+                    }
+                }
+            });
+
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             document.getElementById('user-display').innerText = "👤 Staff: " + userNick;
@@ -163,13 +205,11 @@
         }
     });
 
-    // loadTrips function ထဲတွင် Admin အတွက် Delete Button ပေါ်ရန် ပြုပြင်ထားခြင်း
     function loadTrips() {
         db.ref('trips').on('value', snap => {
             const data = snap.val();
             let html = '';
             const isAdmin = auth.currentUser && auth.currentUser.email === 'admin@agk.com';
-            
             for(let id in data) {
                 html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:12px; border:1px solid #eee; padding: 15px; position: relative;">
                     <div onclick="showBooking('${id}', '${data[id].name}')" style="cursor:pointer; padding-right: 80px;">
@@ -182,16 +222,14 @@
         });
     }
 
-    // ခရီးစဉ်ဖျက်ရန် function အသစ်
     function deleteTrip(tripId, tripName) {
-        if (confirm(`⚠️ သတိပေးချက်: "${tripName}" ခရီးစဉ်နှင့် အရောင်းမှတ်တမ်းများအားလုံးကို ဖျက်ရန် သေချာပါသလား?`)) {
+        if (confirm(`⚠️ "${tripName}" ခရီးစဉ်နှင့် မှတ်တမ်းများအားလုံး ဖျက်မှာ သေချာလား?`)) {
             db.ref(`trips/${tripId}`).remove();
             db.ref(`bookings/${tripId}`).remove();
             db.ref(`active_sessions/${tripId}`).remove();
         }
     }
 
-    // ကျန်သည့် Function များ (မူရင်းအတိုင်း မပြောင်းလဲပါ)
     function showBooking(id, name) {
         currentTripId = id; currentBusName = name;
         document.getElementById('list-area').style.display = 'none';
@@ -226,21 +264,32 @@
         });
     }
 
+    // ဝန်ထမ်းအချင်းချင်း ပြင်ခွင့်ကန့်သတ်ထားသော Modal Function
     function openModal(s, data) {
         selectedSeat = s;
         db.ref(`active_sessions/${currentTripId}/${s}`).set({ user: userNick });
         document.getElementById('seat-label').innerText = "ခုံ: " + s;
-        document.getElementById('c-name').value = data ? (data.name || '') : '';
-        document.getElementById('c-phone').value = data ? (data.phone || '') : '';
-        document.getElementById('c-price').value = data ? (data.price || '') : '';
-        document.getElementById('c-method').value = data ? (data.method || 'Cash') : 'Cash';
-        document.getElementById('c-pickup').value = data ? (data.pickup || '') : '';
-        document.getElementById('sold-by-info').innerText = data ? "Sold By: " + (data.soldBy || "-") : "";
+        
+        const fields = { name: 'c-name', nrc: 'c-nrc', phone: 'c-phone', price: 'c-price', method: 'c-method', pickup: 'c-pickup' };
+        for(let key in fields) document.getElementById(fields[key]).value = data ? (data[key] || '') : (key==='method'?'Cash':'');
+
+        const soldBy = data ? data.soldBy : null;
+        const isAdmin = auth.currentUser.email === 'admin@agk.com';
+        const canEdit = !data || isAdmin || (soldBy === userNick);
+
+        // Input များကို ဖွင့်/ပိတ် လုပ်ခြင်း
+        for(let key in fields) document.getElementById(fields[key]).disabled = !canEdit;
+        document.getElementById('sold-by-info').innerText = data ? "Sold By: " + soldBy : "";
+
         let btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save</button>`;
         if(data) {
             btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print</button>`;
-            btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update</button>`;
-            if(auth.currentUser.email === 'admin@agk.com') btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete</button>`;
+            if(canEdit) {
+                btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update</button>`;
+                btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete</button>`;
+            } else {
+                btns += `<p style="color:red; font-size:12px; margin-top:5px;">⚠️ ဤခုံကို ${soldBy} မှ ရောင်းထားသဖြင့် သင်ပြင်၍မရပါ။</p>`;
+            }
         }
         document.getElementById('modal-btns').innerHTML = btns;
         document.getElementById('modal').style.display = 'block';
@@ -250,7 +299,7 @@
         const name = document.getElementById('c-name').value, phone = document.getElementById('c-phone').value, price = document.getElementById('c-price').value;
         if(!name || !phone || !price) return alert("အချက်အလက်ဖြည့်ပါ");
         db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
-            name, phone, price, method: document.getElementById('c-method').value,
+            name, nrc: document.getElementById('c-nrc').value, phone, price, method: document.getElementById('c-method').value,
             pickup: document.getElementById('c-pickup').value, soldBy: userNick, busName: currentBusName, voucherId: "V" + Date.now().toString().slice(-6)
         }).then(() => closeModal());
     }
@@ -298,4 +347,5 @@
     function deleteAllData() { if(confirm("အားလုံးဖျက်မှာလား?")) db.ref('bookings').remove().then(() => closeReport()); }
 </script>
 </body>
-    </html>
+                </html>
+                
