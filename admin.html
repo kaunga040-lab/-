@@ -205,22 +205,40 @@
         }
     });
 
-    function loadTrips() {
-        db.ref('trips').on('value', snap => {
-            const data = snap.val();
-            let html = '';
-            const isAdmin = auth.currentUser && auth.currentUser.email === 'admin@agk.com';
-            for(let id in data) {
-                html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:12px; border:1px solid #eee; padding: 15px; position: relative;">
-                    <div onclick="showBooking('${id}', '${data[id].name}')" style="cursor:pointer; padding-right: 80px;">
-                        <strong>🚌 ${data[id].name}</strong><br><small>${data[id].date}</small>
-                    </div>
-                    ${isAdmin ? `<button onclick="deleteTrip('${id}', '${data[id].name}')" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); background:var(--danger); color:white; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; font-size:12px;">ဖျက်မည်</button>` : ''}
-                </div>`;
-            }
-            document.getElementById('bus-list').innerHTML = html || '<p style="text-align:center; color:#888;">ခရီးစဉ်မရှိပါ။</p>';
+function loadTrips() {
+    db.ref('trips').on('value', snap => {
+        const data = snap.val();
+        let html = '';
+        const isAdmin = auth.currentUser && auth.currentUser.email === 'admin@agk.com';
+        
+        if (!data) {
+            document.getElementById('bus-list').innerHTML = '<p style="text-align:center; color:#888;">ခရီးစဉ်မရှိပါ။</p>';
+            return;
+        }
+
+        // ၁။ Object ကို Array ပြောင်းပြီး Date အလိုက် Sort စီခြင်း
+        const tripList = [];
+        for (let id in data) {
+            tripList.push({ id: id, ...data[id] });
+        }
+
+        // ၂။ Date အလိုက် အစောဆုံးရက်က အပေါ်ဆုံးရောက်အောင် စီမည်
+        tripList.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        // ၃။ စီထားသော Array ကို HTML အဖြစ် ပြောင်းလဲခြင်း
+        tripList.forEach(trip => {
+            html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:12px; border:1px solid #eee; padding: 15px; position: relative;">
+                <div onclick="showBooking('${trip.id}', '${trip.name}')" style="cursor:pointer; padding-right: 80px;">
+                    <strong>🚌 ${trip.name}</strong><br><small>📅 ရက်စွဲ: ${trip.date}</small>
+                </div>
+                ${isAdmin ? `<button onclick="deleteTrip('${trip.id}', '${trip.name}')" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); background:var(--danger); color:white; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; font-size:12px;">ဖျက်မည်</button>` : ''}
+            </div>`;
         });
-    }
+
+        document.getElementById('bus-list').innerHTML = html;
+    });
+}
+    
 
     function deleteTrip(tripId, tripName) {
         if (confirm(`⚠️ "${tripName}" ခရီးစဉ်နှင့် မှတ်တမ်းများအားလုံး ဖျက်မှာ သေချာလား?`)) {
