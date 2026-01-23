@@ -373,24 +373,58 @@ function loadTrips() {
             setTimeout(() => { window.print(); }, 500);
         });
     }
+function showReport() {
+    // ၁။ အွန်လိုင်းရှိနေသူများကို အရင်ယူမယ်
+    db.ref('user_sessions').once('value', uSnap => {
+        const onlineUsers = uSnap.val() || {};
+        let onlineHtml = '<h4>🟢 လက်ရှိအွန်လိုင်းရှိသူများ</h4><ul style="font-size:14px; color:green;">';
+        for(let uid in onlineUsers) {
+            onlineHtml += `<li>${onlineUsers[uid].requestUser || 'Staff'} (Active)</li>`;
+        }
+        onlineHtml += '</ul><hr>';
 
-    function showReport() {
+        // ၂။ အရောင်းစာရင်းများကို တွက်ချက်မယ်
         db.ref('bookings').once('value', snap => {
-            const all = snap.val() || {};
-            let stats = {}, tCount = 0, tSum = 0;
-            for(let tid in all) for(let sid in all[tid]) {
-                const b = all[tid][sid];
-                const bName = b.busName || "Unknown";
-                if(!stats[bName]) stats[bName] = { count: 0, sum: 0 };
-                stats[bName].count++; stats[bName].sum += Number(b.price || 0);
-                tCount++; tSum += Number(b.price || 0);
+            const allTrips = snap.val() || {};
+            let staffStats = {}; // ဝန်ထမ်းအလိုက် စာရင်း
+            let totalSum = 0;
+            let totalCount = 0;
+
+            for (let tid in allTrips) {
+                for (let sid in allTrips[tid]) {
+                    const b = allTrips[tid][sid];
+                    const seller = b.soldBy || "Unknown";
+                    
+                    if (!staffStats[seller]) {
+                        staffStats[seller] = { count: 0, sum: 0, seats: [] };
+                    }
+                    staffStats[seller].count++;
+                    staffStats[seller].sum += Number(b.price || 0);
+                    staffStats[seller].seats.push(`${sid}(${b.busName || 'စုံ'})`);
+                    
+                    totalCount++;
+                    totalSum += Number(b.price || 0);
+                }
             }
-            let h = `<b>Total: ${tCount} စောင် / ${tSum.toLocaleString()} MMK</b><hr>`;
-            for(let n in stats) h += `<div>${n}: ${stats[n].count} ခုံ (${stats[n].sum.toLocaleString()} MMK)</div>`;
-            document.getElementById('report-content').innerHTML = h || "မှတ်တမ်းမရှိပါ။";
+
+            let reportHtml = `<b>💰 စုစုပေါင်းရောင်းရငွေ: ${totalSum.toLocaleString()} MMK (${totalCount} ခုံ)</b><hr>`;
+            
+            for (let staff in staffStats) {
+                reportHtml += `
+                <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--primary);">
+                    <strong style="color:var(--primary);">👤 ဝန်ထမ်း: ${staff}</strong><br>
+                    <span>🎟️ ရောင်းရခုံ: ${staffStats[staff].count} ခုံ</span><br>
+                    <span>💵 ရရှိငွေ: ${staffStats[staff].sum.toLocaleString()} MMK</span><br>
+                    <small style="color:#666; word-break:break-all;">📍 ရောင်းထားသောခုံများ: ${staffStats[staff].seats.join(', ')}</small>
+                </div>`;
+            }
+
+            document.getElementById('report-content').innerHTML = onlineHtml + reportHtml;
             document.getElementById('report-modal').style.display = 'block';
         });
-    }
+    });
+                }
+    
 
     function createTrip() {
         const n = document.getElementById('bus-name').value, d = document.getElementById('bus-date').value;
