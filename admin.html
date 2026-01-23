@@ -46,11 +46,14 @@
     </div>
 
     <div id="app-screen" style="display: none;">
-        <header>
-            <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px 10px;">Logout</button>
-            <h3 style="margin:0;">AGK Ticketing</h3>
-            <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
-        </header>
+      <header>
+    <button onclick="openSettings()" style="position: absolute; left: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px 10px;">⚙️ Setting</button>
+    
+    <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px 10px;">Logout</button>
+    <h3 style="margin:0;">AGK Ticketing</h3>
+    <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
+</header>
+
 
         <div id="admin-only-section" class="section" style="display: none; background: #e8f5e9;">
             <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 အရောင်းရီပို့ကြည့်ရန်</button>
@@ -95,7 +98,23 @@
     </div>
 </div>
 
+    <div id="settings-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1001; overflow-y: auto;">
+    <div class="modal-content">
+        <h3 style="text-align: center;">⚙️ Settings</h3>
+        <hr>
+        <div id="change-pw-section">
+            <h4 style="margin-bottom:10px;">Password ပြောင်းလဲရန်</h4>
+            <input type="password" id="old-pass" placeholder="Password အဟောင်းကို ရိုက်ပါ">
+            <input type="password" id="new-pass" placeholder="Password အသစ်ကို ရိုက်ပါ">
+            <input type="password" id="confirm-new-pass" placeholder="Password အသစ်ကို ထပ်ရိုက်ပါ">
+            <button class="btn" style="background: var(--secondary);" onclick="changePassword()">Update Password</button>
+        </div>
+        <button class="btn" style="background:#888; margin-top:15px;" onclick="closeSettings()">ပိတ်ပါ</button>
+    </div>
+</div>
+
 <div id="report-modal">
+
     <div class="modal-content">
         <button onclick="toggleSettings()" style="position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 20px;">⚙️</button>
         <h3 style="text-align: center;">📊 Daily Report</h3>
@@ -463,6 +482,38 @@ function showReport() {
         alert("Password မှားယွင်းနေပါသည်။");
     });
     }
+// Modal ဖွင့်ရန်/ပိတ်ရန်
+function openSettings() { document.getElementById('settings-modal').style.display = 'block'; }
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+
+function changePassword() {
+    const oldPw = document.getElementById('old-pass').value;
+    const newPw = document.getElementById('new-pass').value;
+    const confirmNew = document.getElementById('confirm-new-pass').value;
+
+    if (!oldPw || !newPw || !confirmNew) return alert("အချက်အလက်အားလုံး ဖြည့်စွက်ပါ");
+    if (newPw !== confirmNew) return alert("Password အသစ်နှစ်ခု မကိုက်ညီပါ");
+    if (newPw.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
+
+    const user = auth.currentUser;
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPw);
+
+    // အဆင့် (၁) - ပတ်ဝပ်ဟောင်း မှန်မမှန် အရင်စစ်သည် (Re-authenticate)
+    user.reauthenticateWithCredential(credential).then(() => {
+        // အဆင့် (၂) - ပတ်ဝပ်အသစ်သို့ ပြောင်းလဲသည်
+        user.updatePassword(newPw).then(() => {
+            alert("Password အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။");
+            closeSettings();
+            // Input field များကို ရှင်းထုတ်ခြင်း
+            document.getElementById('old-pass').value = '';
+            document.getElementById('new-pass').value = '';
+            document.getElementById('confirm-new-pass').value = '';
+        }).catch(error => alert("အမှား: " + error.message));
+    }).catch(error => {
+        alert("Password အဟောင်း မှားယွင်းနေပါသည်။");
+    });
+    }
+    
     
 </script>
 </body>
