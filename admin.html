@@ -240,14 +240,26 @@ function loadTrips() {
 }
     
 
-    function deleteTrip(tripId, tripName) {
-        if (confirm(`⚠️ "${tripName}" ခရီးစဉ်နှင့် မှတ်တမ်းများအားလုံး ဖျက်မှာ သေချာလား?`)) {
-            db.ref(`trips/${tripId}`).remove();
-            db.ref(`bookings/${tripId}`).remove();
-            db.ref(`active_sessions/${tripId}`).remove();
-        }
-    }
+function deleteTrip(tripId, tripName) {
+    const pw = prompt(`⚠️ "${tripName}" ကို ဖျက်ရန် သင်၏ Login Password ရိုက်ထည့်ပါ:`);
+    if (!pw) return;
 
+    const user = auth.currentUser;
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, pw);
+
+    // Password မှန်မမှန် Firebase မှာ ပြန်စစ်ဆေးခြင်း (Re-authenticate)
+    user.reauthenticateWithCredential(credential).then(() => {
+        if (confirm(`အတည်ပြုပါသလား? ခရီးစဉ်ကိုသာ ဖျက်ပါမည်။ အရောင်းမှတ်တမ်းများ ကျန်နေပါမည်။`)) {
+            db.ref(`trips/${tripId}`).remove();
+            db.ref(`active_sessions/${tripId}`).remove();
+            alert("ဖျက်ပြီးပါပြီ။");
+        }
+    }).catch(error => {
+        alert("Password မှားယွင်းနေပါသည်။");
+    });
+}
+    
+                       
     function showBooking(id, name) {
         currentTripId = id; currentBusName = name;
         document.getElementById('list-area').style.display = 'none';
@@ -432,7 +444,26 @@ function showReport() {
     }
     function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
     function toggleSettings() { const m = document.getElementById('settings-menu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
-    function deleteAllData() { if(confirm("အားလုံးဖျက်မှာလား?")) db.ref('bookings').remove().then(() => closeReport()); }
+   
+    function deleteAllData() {
+    const pw = prompt("အရောင်းမှတ်တမ်းများ (Bookings) အားလုံးကို အပြီးတိုင်ဖျက်ရန် သင်၏ Login Password ရိုက်ပါ:");
+    if (!pw) return;
+
+    const user = auth.currentUser;
+    const credential = firebase.auth.EmailAuthProvider.credential(user.email, pw);
+
+    user.reauthenticateWithCredential(credential).then(() => {
+        if(confirm("ဤလုပ်ဆောင်ချက်သည် အရောင်းရီပို့အားလုံးကို ရှင်းလင်းပစ်မည်။ သေချာပါသလား?")) {
+            db.ref('bookings').remove().then(() => {
+                alert("မှတ်တမ်းများ အားလုံး ဖျက်ပြီးပါပြီ။");
+                closeReport();
+            });
+        }
+    }).catch(error => {
+        alert("Password မှားယွင်းနေပါသည်။");
+    });
+    }
+    
 </script>
 </body>
                 </html>
