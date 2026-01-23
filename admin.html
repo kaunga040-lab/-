@@ -259,60 +259,96 @@ function loadTrips() {
     function hideBooking() { releaseLock(); document.getElementById('list-area').style.display = 'block'; document.getElementById('booking-area').style.display = 'none'; }
 
     function renderSeats(tripId) {
-        db.ref(`bookings/${tripId}`).on('value', bSnap => {
-            const booked = bSnap.val() || {};
-            db.ref(`active_sessions/${tripId}`).on('value', lSnap => {
-                const locks = lSnap.val() || {};
-                const map = document.getElementById('seat-map'); map.innerHTML = '';
-                const layout = [['A1', 'A2', 'Driver'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], ['D1', 'D2', 'D3'], ['E1', 'E2', 'E3', 'E4']];
-                layout.forEach((row, idx) => {
-                    const rowDiv = document.createElement('div');
-                    if(idx === 4) rowDiv.className = 'last-row';
-                    row.forEach(s => {
-                        const div = document.createElement('div');
-                        const isSold = booked[s], isLocked = locks[s] && locks[s].user !== userNick;
-                        div.className = s === 'Driver' ? 'seat driver' : `seat ${isSold ? 'sold' : ''} ${isLocked ? 'locked' : ''}`;
-                        div.innerText = s;
-                        if(s !== 'Driver') div.onclick = () => isLocked ? alert("ဝန်ထမ်း " + locks[s].user + " ဝင်နေသည်") : openModal(s, isSold);
-                        if(idx === 4) rowDiv.appendChild(div); else map.appendChild(div);
-                    });
-                    if(idx === 4) map.appendChild(rowDiv);
+    db.ref(`bookings/${tripId}`).on('value', bSnap => {
+        const booked = bSnap.val() || {};
+        db.ref(`active_sessions/${tripId}`).on('value', lSnap => {
+            const locks = lSnap.val() || {};
+            const map = document.getElementById('seat-map'); map.innerHTML = '';
+            const layout = [['A1', 'A2', 'Driver'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], ['D1', 'D2', 'D3'], ['E1', 'E2', 'E3', 'E4']];
+            
+            const now = Date.now();
+            const lockTimeout = 5 * 60 * 1000; // ၅ မိနစ် (5 minutes in milliseconds)
+
+            layout.forEach((row, idx) => {
+                const rowDiv = document.createElement('div');
+                if(idx === 4) rowDiv.className = 'last-row';
+                row.forEach(s => {
+                    const div = document.createElement('div');
+                    const isSold = booked[s];
+                    
+                    // Lock ရှိမရှိ စစ်ဆေးခြင်း (အချိန်ကျော်နေရင် Lock မရှိသလို သတ်မှတ်မယ်)
+                    let isLocked = false;
+                    if (locks[s] && locks[s].user !== userNick) {
+                        const lockTime = locks[s].time || 0;
+                        if (now - lockTime < lockTimeout) {
+                            isLocked = true;
+                        }
+                    }
+
+                    div.className = s === 'Driver' ? 'seat driver' : `seat ${isSold ? 'sold' : ''} ${isLocked ? 'locked' : ''}`;
+                    div.innerText = s;
+                    
+                    if(s !== 'Driver') {
+                        div.onclick = () => isLocked ? alert("ဝန်ထမ်း " + locks[s].user + " ဝင်နေသည်") : openModal(s, isSold);
+                    }
+                    
+                    if(idx === 4) rowDiv.appendChild(div); else map.appendChild(div);
                 });
+                if(idx === 4) map.appendChild(rowDiv);
             });
         });
+    });
     }
-
+    
     // ဝန်ထမ်းအချင်းချင်း ပြင်ခွင့်ကန့်သတ်ထားသော Modal Function
     function openModal(s, data) {
-        selectedSeat = s;
-        db.ref(`active_sessions/${currentTripId}/${s}`).set({ user: userNick });
-        document.getElementById('seat-label').innerText = "ခုံ: " + s;
-        
-        const fields = { name: 'c-name', nrc: 'c-nrc', phone: 'c-phone', price: 'c-price', method: 'c-method', pickup: 'c-pickup' };
-        for(let key in fields) document.getElementById(fields[key]).value = data ? (data[key] || '') : (key==='method'?'Cash':'');
+    selectedSeat = s;
+    const lockRef = db.ref(`active_sessions/${currentTripId}/${s}`);
 
-        const soldBy = data ? data.soldBy : null;
-        const isAdmin = auth.currentUser.email === 'admin@agk.com';
-        const canEdit = !data || isAdmin || (soldBy === userNick);
+    // (၁) အချိန်နဲ့ နာမည်ကို သိမ်းပြီး အင်တာနက်ပြတ်ရင် Lock ဖြုတ်ဖို့ သတ်မှတ်ခြင်း
+    lockRef.set({ 
+        user: userNick,
+        time: Date.now() 
+    });
+    lockRef.onDisconnect().remove();
 
-        // Input များကို ဖွင့်/ပိတ် လုပ်ခြင်း
-        for(let key in fields) document.getElementById(fields[key]).disabled = !canEdit;
-        document.getElementById('sold-by-info').innerText = data ? "Sold By: " + soldBy : "";
-
-        let btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save</button>`;
-        if(data) {
-            btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print</button>`;
-            if(canEdit) {
-                btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update</button>`;
-                btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete</button>`;
-            } else {
-                btns += `<p style="color:red; font-size:12px; margin-top:5px;">⚠️ ဤခုံကို ${soldBy} မှ ရောင်းထားသဖြင့် သင်ပြင်၍မရပါ။</p>`;
-            }
-        }
-        document.getElementById('modal-btns').innerHTML = btns;
-        document.getElementById('modal').style.display = 'block';
+    document.getElementById('seat-label').innerText = "ခုံ: " + s;
+    
+    // (၂) Input Field များထဲသို့ Data ဖြည့်ခြင်း
+    const fields = { name: 'c-name', nrc: 'c-nrc', phone: 'c-phone', price: 'c-price', method: 'c-method', pickup: 'c-pickup' };
+    for(let key in fields) {
+        document.getElementById(fields[key]).value = data ? (data[key] || '') : (key === 'method' ? 'Cash' : '');
     }
 
+    // (၃) လုပ်ပိုင်ခွင့် စစ်ဆေးခြင်း (Admin သို့မဟုတ် ခုံရောင်းသူ ဖြစ်မှ ပြင်ခွင့်ပေးမည်)
+    const soldBy = data ? data.soldBy : null;
+    const isAdmin = auth.currentUser.email === 'admin@agk.com';
+    const isOwner = soldBy === userNick;
+    const canEdit = !data || isAdmin || isOwner;
+
+    // Input များကို ဖွင့်/ပိတ် လုပ်ခြင်း
+    for(let key in fields) {
+        document.getElementById(fields[key]).disabled = !canEdit;
+    }
+    document.getElementById('sold-by-info').innerText = data ? "Sold By: " + (soldBy || "-") : "";
+
+    // (၄) ခလုတ်များ ပြသခြင်း
+    let btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save</button>`;
+    if(data) {
+        btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print</button>`;
+        if(canEdit) {
+            btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update</button>`;
+            btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete</button>`;
+        } else {
+            btns += `<p style="color:red; font-size:12px; margin-top:5px; font-weight:bold; text-align:center;">
+                        ⚠️ ဤခုံကို ${soldBy} မှ ရောင်းထားသဖြင့် သင်ပြင်၍မရပါ။
+                     </p>`;
+        }
+    }
+    document.getElementById('modal-btns').innerHTML = btns;
+    document.getElementById('modal').style.display = 'block';
+    }
+        
     function saveBooking() {
         const name = document.getElementById('c-name').value, phone = document.getElementById('c-phone').value, price = document.getElementById('c-price').value;
         if(!name || !phone || !price) return alert("အချက်အလက်ဖြည့်ပါ");
