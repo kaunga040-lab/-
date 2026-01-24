@@ -98,18 +98,29 @@
     </div>
 </div>
 
-    <div id="settings-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1001; overflow-y: auto;">
+<div id="settings-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1001; overflow-y: auto;">
     <div class="modal-content">
         <h3 style="text-align: center;">⚙️ Settings</h3>
         <hr>
+        
         <div id="change-pw-section">
             <h4 style="margin-bottom:10px;">Password ပြောင်းလဲရန်</h4>
-            <input type="password" id="old-pass" placeholder="Password အဟောင်းကို ရိုက်ပါ">
-            <input type="password" id="new-pass" placeholder="Password အသစ်ကို ရိုက်ပါ">
-            <input type="password" id="confirm-new-pass" placeholder="Password အသစ်ကို ထပ်ရိုက်ပါ">
+            <input type="password" id="old-pass" placeholder="Password အဟောင်း">
+            <input type="password" id="new-pass" placeholder="Password အသစ်">
+            <input type="password" id="confirm-new-pass" placeholder="Password ထပ်ရိုက်ပါ">
             <button class="btn" style="background: var(--secondary);" onclick="changePassword()">Update Password</button>
         </div>
-        <button class="btn" style="background:#888; margin-top:15px;" onclick="closeSettings()">ပိတ်ပါ</button>
+
+        <hr style="margin: 20px 0; border: 0.5px solid #eee;">
+
+        <div id="user-management-section">
+            <h4 style="margin-bottom:10px;">➕ ကိုယ်စားလှယ်အသစ်ထည့်ရန်</h4>
+            <input type="email" id="new-user-email" placeholder="Email (ဥပမာ- staff1@agk.com)">
+            <input type="password" id="new-user-pass" placeholder="Password သတ်မှတ်ပါ">
+            <button class="btn" style="background: var(--primary);" onclick="createNewUser()">အကောင့်ဖွင့်ပေးမည်</button>
+        </div>
+
+        <button class="btn" style="background:#888; margin-top:20px;" onclick="closeSettings()">ပိတ်ပါ</button>
     </div>
 </div>
 
