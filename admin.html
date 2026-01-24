@@ -493,39 +493,82 @@ function showReport() {
         alert("Password မှားယွင်းနေပါသည်။");
     });
     }
-// Modal ဖွင့်ရန်/ပိတ်ရန်
-function openSettings() { document.getElementById('settings-modal').style.display = 'block'; }
-function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
-
-function changePassword() {
-    const oldPw = document.getElementById('old-pass').value;
-    const newPw = document.getElementById('new-pass').value;
-    const confirmNew = document.getElementById('confirm-new-pass').value;
-
-    if (!oldPw || !newPw || !confirmNew) return alert("အချက်အလက်အားလုံး ဖြည့်စွက်ပါ");
-    if (newPw !== confirmNew) return alert("Password အသစ်နှစ်ခု မကိုက်ညီပါ");
-    if (newPw.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
-
-    const user = auth.currentUser;
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPw);
-
-    // အဆင့် (၁) - ပတ်ဝပ်ဟောင်း မှန်မမှန် အရင်စစ်သည် (Re-authenticate)
-    user.reauthenticateWithCredential(credential).then(() => {
-        // အဆင့် (၂) - ပတ်ဝပ်အသစ်သို့ ပြောင်းလဲသည်
-        user.updatePassword(newPw).then(() => {
-            alert("Password အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။");
-            closeSettings();
-            // Input field များကို ရှင်းထုတ်ခြင်း
-            document.getElementById('old-pass').value = '';
-            document.getElementById('new-pass').value = '';
-            document.getElementById('confirm-new-pass').value = '';
-        }).catch(error => alert("အမှား: " + error.message));
-    }).catch(error => {
-        alert("Password အဟောင်း မှားယွင်းနေပါသည်။");
-    });
+    // --- (၁) Setting Modal ဖွင့်ရန်/ပိတ်ရန် (Header က Setting ခလုတ်အတွက်) ---
+    function openSettings() { 
+        document.getElementById('settings-modal').style.display = 'block'; 
+        
+        // Admin ဟုတ်မဟုတ် စစ်ပြီး User Management Form ကို ပြခြင်း/ဖျောက်ခြင်း
+        const user = auth.currentUser;
+        db.ref('admins/' + user.uid).once('value', snap => {
+            const userMgmt = document.getElementById('user-management-section');
+            if (snap.exists()) {
+                userMgmt.style.display = 'block'; // Admin ဖြစ်လျှင်ပြမည်
+            } else {
+                userMgmt.style.display = 'none';  // ဝန်ထမ်းဖြစ်လျှင်ဖျောက်မည်
+            }
+        });
     }
-    
-    
+
+    function closeSettings() { 
+        document.getElementById('settings-modal').style.display = 'none'; 
+    }
+
+    // --- (၂) Report Modal ထဲက Setting ဖွင့်ရန်/ပိတ်ရန် (Data ဖျက်ရန်အတွက်) ---
+    function toggleSettings() {
+        const menu = document.getElementById('settings-menu');
+        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+    }
+
+    // --- (၃) Password ပြောင်းလဲသည့် Function ---
+    function changePassword() {
+        const oldPw = document.getElementById('old-pass').value;
+        const newPw = document.getElementById('new-pass').value;
+        const confirmNew = document.getElementById('confirm-new-pass').value;
+
+        if (!oldPw || !newPw || !confirmNew) return alert("အချက်အလက်အားလုံး ဖြည့်စွက်ပါ");
+        if (newPw !== confirmNew) return alert("Password အသစ်နှစ်ခု မကိုက်ညီပါ");
+        if (newPw.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
+
+        const user = auth.currentUser;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPw);
+
+        user.reauthenticateWithCredential(credential).then(() => {
+            user.updatePassword(newPw).then(() => {
+                alert("Password အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။");
+                closeSettings();
+                document.getElementById('old-pass').value = '';
+                document.getElementById('new-pass').value = '';
+                document.getElementById('confirm-new-pass').value = '';
+            }).catch(error => alert("အမှား: " + error.message));
+        }).catch(error => alert("Password အဟောင်း မှားယွင်းနေပါသည်။"));
+    }
+
+    // --- (၄) ကိုယ်စားလှယ်သစ်ထည့်သွင်းသည့် Function ---
+    function createNewUser() {
+        const email = document.getElementById('new-user-email').value;
+        const pass = document.getElementById('new-user-pass').value;
+
+        if (!email || !pass) return alert("Email နှင့် Password ဖြည့်ပါ");
+        if (pass.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
+
+        firebase.auth().createUserWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                const user = userCredential.user;
+                // Database တွင် ဝန်ထမ်းအဖြစ် မှတ်တမ်းတင်ခြင်း
+                db.ref('users/' + user.uid).set({
+                    email: email,
+                    role: 'staff',
+                    createdAt: Date.now()
+                }).then(() => {
+                    alert("ကိုယ်စားလှယ်အသစ် " + email + " ကို အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။");
+                    document.getElementById('new-user-email').value = '';
+                    document.getElementById('new-user-pass').value = '';
+                });
+            })
+            .catch((error) => alert("အမှား: " + error.message));
+    }
+
+   
 </script>
 </body>
                 </html>
