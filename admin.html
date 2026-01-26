@@ -152,17 +152,20 @@
 </div>
 
 <script>
+<script>
+    // Device ID သတ်မှတ်ခြင်း
     const deviceId = navigator.userAgent.replace(/\s+/g, '').slice(0, 30) + (window.screen.width + window.screen.height);
 
+    // Firebase Configuration (ပြင်ဆင်ပြီး)
     const firebaseConfig = {
-    apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
-    authDomain: "a-gyi-kaung.firebaseapp.com",
-    databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com", // /admins ကိုဖယ်ပြီး ကော်မာထည့်ပါ
-    projectId: "a-gyi-kaung",
-    storageBucket: "a-gyi-kaung.firebasestorage.app",
-    messagingSenderId: "1002724874482",
-    appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
-};
+        apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
+        authDomain: "a-gyi-kaung.firebaseapp.com",
+        databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com", 
+        projectId: "a-gyi-kaung",
+        storageBucket: "a-gyi-kaung.firebasestorage.app",
+        messagingSenderId: "1002724874482",
+        appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
+    };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -170,39 +173,39 @@
 
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
-    // Device Lock Logic ပါဝင်သော Login Function
-
+    // Login Function (အသစ်ပြန်ပြင်ထားသည်)
     window.login = function() {
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-pass').value;
-    const errDisplay = document.getElementById('login-error');
-    
-    if(!email || !pass) { alert("Email နှင့် Password ဖြည့်ပါ"); return; }
-
-    auth.signInWithEmailAndPassword(email, pass).then(userCredential => {
-        const user = userCredential.user;
-        const userRef = db.ref('user_sessions/' + user.uid);
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        const errDisplay = document.getElementById('login-error');
         
-        userRef.once('value').then(snap => {
-            const session = snap.val();
-            if (!session || session.currentDevice === deviceId) {
-                userRef.update({ currentDevice: deviceId, status: 'approved' }).then(() => {
-                    alert("ဝင်ရောက်ခြင်း အောင်မြင်ပါသည်။");
-                    location.reload(); 
-                });
-            } else {
-                userRef.update({ 
-                    requestDevice: deviceId, 
-                    status: 'pending', 
-                    requestUser: email.split('@')[0].toUpperCase() 
-                });
-                alert("အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...");
-            }
+        if(!email || !pass) { alert("Email နှင့် Password ဖြည့်ပါ"); return; }
+
+        auth.signInWithEmailAndPassword(email, pass).then(userCredential => {
+            const user = userCredential.user;
+            const userRef = db.ref('user_sessions/' + user.uid);
+            
+            userRef.once('value').then(snap => {
+                const session = snap.val();
+                if (!session || session.currentDevice === deviceId) {
+                    userRef.update({ currentDevice: deviceId, status: 'approved' }).then(() => {
+                        location.reload(); 
+                    });
+                } else {
+                    userRef.update({ 
+                        requestDevice: deviceId, 
+                        status: 'pending', 
+                        requestUser: email.split('@')[0].toUpperCase() 
+                    });
+                    alert("အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...");
+                }
+            }).catch(e => {
+                alert("Database Error: " + e.message);
+            });
+        }).catch(error => { 
+            alert("Login Error: " + error.message); 
         });
-    }).catch(error => { 
-        alert("အကောင့်ဝင်ရန် အမှား: " + error.message); 
-    });
-};
+    };
     
 
     window.logout = function() { 
