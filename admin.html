@@ -176,21 +176,35 @@
     window.login = function() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-pass').value;
+    const errDisplay = document.getElementById('login-error');
     
-    // ချိတ်ဆက်မှုစတင်ကြောင်း သိရအောင် Alert ပြခြင်း
-    alert("ဝင်ရောက်ရန် ကြိုးစားနေသည်..."); 
+    if(!email || !pass) { alert("Email နှင့် Password ဖြည့်ပါ"); return; }
 
-    auth.signInWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-        alert("Login အောင်မြင်ပါပြီ! User: " + userCredential.user.email);
-        location.reload(); 
-    })
-    .catch((error) => {
-        alert("Login မရရခြင်းအကြောင်းရင်း: " + error.message);
+    auth.signInWithEmailAndPassword(email, pass).then(userCredential => {
+        const user = userCredential.user;
+        const userRef = db.ref('user_sessions/' + user.uid);
+        
+        userRef.once('value').then(snap => {
+            const session = snap.val();
+            if (!session || session.currentDevice === deviceId) {
+                userRef.update({ currentDevice: deviceId, status: 'approved' }).then(() => {
+                    alert("ဝင်ရောက်ခြင်း အောင်မြင်ပါသည်။");
+                    location.reload(); 
+                });
+            } else {
+                userRef.update({ 
+                    requestDevice: deviceId, 
+                    status: 'pending', 
+                    requestUser: email.split('@')[0].toUpperCase() 
+                });
+                alert("အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...");
+            }
+        });
+    }).catch(error => { 
+        alert("အကောင့်ဝင်ရန် အမှား: " + error.message); 
     });
 };
     
-       
 
     window.logout = function() { 
         const user = auth.currentUser;
