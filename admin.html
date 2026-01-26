@@ -172,37 +172,24 @@
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
     // Device Lock Logic ပါဝင်သော Login Function
-   window.login = function() {
+
+    window.login = function() {
     const email = document.getElementById('login-email').value;
     const pass = document.getElementById('login-pass').value;
-    const errDisplay = document.getElementById('login-error');
-    if(!email || !pass) { errDisplay.innerText = "Email နှင့် Password ဖြည့်ပါ"; return; }
+    
+    // ချိတ်ဆက်မှုစတင်ကြောင်း သိရအောင် Alert ပြခြင်း
+    alert("ဝင်ရောက်ရန် ကြိုးစားနေသည်..."); 
 
-    auth.signInWithEmailAndPassword(email, pass).then(userCredential => {
-        const user = userCredential.user;
-        const userRef = db.ref('user_sessions/' + user.uid);
-        
-        userRef.once('value').then(snap => {
-            const session = snap.val();
-            if (!session || session.currentDevice === deviceId) {
-                userRef.update({ currentDevice: deviceId, status: 'approved' }).then(() => {
-                    location.reload(); // အောင်မြင်ရင် Refresh လုပ်မယ်
-                });
-            } else {
-                userRef.update({ requestDevice: deviceId, status: 'pending', requestUser: email.split('@')[0].toUpperCase() });
-                errDisplay.innerText = "အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...";
-                userRef.on('value', sSnap => {
-                    if (sSnap.val() && sSnap.val().status === 'approved' && sSnap.val().currentDevice === deviceId) location.reload();
-                });
-            }
-        }).catch(dbErr => {
-            console.error("Database Error:", dbErr);
-            errDisplay.innerText = "Database ချိတ်ဆက်မှု အမှား: " + dbErr.message;
-        });
-    }).catch(error => { 
-        errDisplay.innerText = "အကောင့်ဝင်ရန် အမှား: " + error.message; 
+    auth.signInWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+        alert("Login အောင်မြင်ပါပြီ! User: " + userCredential.user.email);
+        location.reload(); 
+    })
+    .catch((error) => {
+        alert("Login မရရခြင်းအကြောင်းရင်း: " + error.message);
     });
 };
+    
        
 
     window.logout = function() { 
