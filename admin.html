@@ -155,14 +155,15 @@
     const deviceId = navigator.userAgent.replace(/\s+/g, '').slice(0, 30) + (window.screen.width + window.screen.height);
 
     const firebaseConfig = {
-        apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
-        authDomain: "a-gyi-kaung.firebaseapp.com",
-        databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com",
-        projectId: "a-gyi-kaung",
-        storageBucket: "a-gyi-kaung.firebasestorage.app",
-        messagingSenderId: "1002724874482",
-        appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
-    };
+    apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
+    authDomain: "a-gyi-kaung.firebaseapp.com",
+    databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com", // ဒီနေရာကို သေချာစစ်ပါ
+    projectId: "a-gyi-kaung",
+    storageBucket: "a-gyi-kaung.firebasestorage.app",
+    messagingSenderId: "1002724874482",
+    appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
+};
+    
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
