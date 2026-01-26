@@ -659,13 +659,26 @@ function showReport() {
         }).catch(() => alert("Password မှားယွင်းနေပါသည်။"));
     }
 
-    function createTrip() {
-        const n = document.getElementById('bus-name').value, d = document.getElementById('bus-date').value;
-        if(n && d) db.ref('trips/' + Date.now()).set({ name: n, date: d }).then(() => {
-            alert("ခရီးစဉ် ဖန်တီးပြီးပါပြီ။");
-            document.getElementById('bus-name').value = '';
-        });
+        function createTrip() {
+        const n = document.getElementById('bus-name').value;
+        const d = document.getElementById('bus-date').value;
+        
+        if(n && d) {
+            // ခရီးစဉ်အသစ်ကို Database သို့ ပို့ခြင်း
+            db.ref('trips/' + Date.now()).set({ 
+                name: n, 
+                date: d 
+            }).then(() => {
+                alert("ခရီးစဉ် ဖန်တီးပြီးပါပြီ။");
+                // ဖြည့်ထားတဲ့ စာသားတွေကို ပြန်ဖျက်ပေးခြင်း (Reset fields)
+                document.getElementById('bus-name').value = '';
+                document.getElementById('bus-date').value = '';
+            });
+        } else {
+            alert("ကားလိုင်းအမည်နှင့် ရက်စွဲကို ပြည့်စုံစွာ ဖြည့်ပါ");
+        }
     }
+    
 </script>
 </body>
 </html>
