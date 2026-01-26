@@ -517,9 +517,55 @@ function showReport() {
     function toggleSettings() {
         const menu = document.getElementById('settings-menu');
         menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+
+        // --- (၁) Booking သိမ်းဆည်းခြင်း/ဖျက်ခြင်း ---
+    function saveBooking() {
+        const name = document.getElementById('c-name').value;
+        const nrc = document.getElementById('c-nrc').value;
+        const phone = document.getElementById('c-phone').value;
+        const price = document.getElementById('c-price').value;
+        const method = document.getElementById('c-method').value;
+        const pickup = document.getElementById('c-pickup').value;
+
+        if (!name || !phone || !price) return alert("အမည်၊ ဖုန်းနှင့် ဈေးနှုန်း ဖြည့်စွက်ပါ");
+
+        db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
+            name, nrc, phone, price, method, pickup,
+            soldBy: userNick,
+            busName: currentBusName,
+            voucherId: "V" + Date.now().toString().slice(-6),
+            time: Date.now()
+        }).then(() => closeModal());
     }
 
-    // --- (၃) Password ပြောင်းလဲသည့် Function ---
+    function deleteBooking() {
+        if (confirm("ဤခုံစာရင်းကို ဖျက်ရန် သေချာပါသလား?")) {
+            db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove().then(() => closeModal());
+        }
+    }
+
+    function closeModal() { releaseLock(); document.getElementById('modal').style.display = 'none'; }
+    function releaseLock() { if (selectedSeat && currentTripId) db.ref(`active_sessions/${currentTripId}/${selectedSeat}`).remove(); }
+
+    // --- (၂) Setting Functions (Admin စစ်ဆေးခြင်း ပါဝင်သည်) ---
+    function openSettings() { 
+        document.getElementById('settings-modal').style.display = 'block'; 
+        const user = auth.currentUser;
+        // Database ရှိ admins node ထဲတွင် လက်ရှိ user ရှိမရှိ စစ်ဆေးခြင်း
+        db.ref('admins/' + user.uid).once('value', snap => {
+            const userMgmt = document.getElementById('user-management-section');
+            if (snap.exists()) {
+                userMgmt.style.display = 'block'; // Admin ဖြစ်လျှင် ကိုယ်စားလှယ်သစ်ထည့်ရန်အပိုင်းကို ပြမည်
+            } else {
+                userMgmt.style.display = 'none';  // ဝန်ထမ်းဖြစ်လျှင် ဖျောက်ထားမည်
+            }
+        });
+    }
+
+    function closeSettings() { 
+        document.getElementById('settings-modal').style.display = 'none'; 
+    }
+
     function changePassword() {
         const oldPw = document.getElementById('old-pass').value;
         const newPw = document.getElementById('new-pass').value;
@@ -534,16 +580,12 @@ function showReport() {
 
         user.reauthenticateWithCredential(credential).then(() => {
             user.updatePassword(newPw).then(() => {
-                alert("Password အောင်မြင်စွာ ပြောင်းလဲပြီးပါပြီ။");
+                alert("Password ပြောင်းလဲပြီးပါပြီ။");
                 closeSettings();
-                document.getElementById('old-pass').value = '';
-                document.getElementById('new-pass').value = '';
-                document.getElementById('confirm-new-pass').value = '';
             }).catch(error => alert("အမှား: " + error.message));
-        }).catch(error => alert("Password အဟောင်း မှားယွင်းနေပါသည်။"));
+        }).catch(() => alert("Password အဟောင်း မှားယွင်းနေပါသည်။"));
     }
 
-    // --- (၄) ကိုယ်စားလှယ်သစ်ထည့်သွင်းသည့် Function ---
     function createNewUser() {
         const email = document.getElementById('new-user-email').value;
         const pass = document.getElementById('new-user-pass').value;
@@ -551,25 +593,79 @@ function showReport() {
         if (!email || !pass) return alert("Email နှင့် Password ဖြည့်ပါ");
         if (pass.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
 
-        firebase.auth().createUserWithEmailAndPassword(email, pass)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                // Database တွင် ဝန်ထမ်းအဖြစ် မှတ်တမ်းတင်ခြင်း
-                db.ref('users/' + user.uid).set({
-                    email: email,
-                    role: 'staff',
-                    createdAt: Date.now()
-                }).then(() => {
-                    alert("ကိုယ်စားလှယ်အသစ် " + email + " ကို အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။");
-                    document.getElementById('new-user-email').value = '';
-                    document.getElementById('new-user-pass').value = '';
-                });
-            })
-            .catch((error) => alert("အမှား: " + error.message));
+        firebase.auth().createUserWithEmailAndPassword(email, pass).then((u) => {
+            db.ref('users/' + u.user.uid).set({
+                email: email, role: 'staff', createdAt: Date.now()
+            });
+            alert("ကိုယ်စားလှယ်သစ် " + email + " ကို ထည့်သွင်းပြီးပါပြီ။");
+            document.getElementById('new-user-email').value = '';
+            document.getElementById('new-user-pass').value = '';
+        }).catch(error => alert("အမှား: " + error.message));
     }
 
-   
+    // --- (၃) Report & Print Functions ---
+    function showReport() {
+        db.ref('user_sessions').once('value', uSnap => {
+            const onlineUsers = uSnap.val() || {};
+            let onlineHtml = '<h4>🟢 လက်ရှိအွန်လိုင်း</h4><ul style="font-size:14px; color:green;">';
+            for(let uid in onlineUsers) onlineHtml += `<li>${onlineUsers[uid].requestUser || 'Staff'}</li>`;
+            onlineHtml += '</ul><hr>';
+
+            db.ref('bookings').once('value', snap => {
+                const all = snap.val() || {};
+                let reportHtml = '<table style="width:100%; font-size:12px; border-collapse:collapse;" border="1"><tr><th>Trips</th><th>Seat</th><th>Price</th><th>Staff</th></tr>';
+                let total = 0;
+                for (let tId in all) {
+                    for (let sId in all[tId]) {
+                        const b = all[tId][sId];
+                        reportHtml += `<tr><td>${b.busName || 'စုံ'}</td><td>${sId}</td><td>${Number(b.price).toLocaleString()}</td><td>${b.soldBy}</td></tr>`;
+                        total += parseInt(b.price || 0);
+                    }
+                }
+                reportHtml += `<tr><td colspan="2"><b>စုစုပေါင်း</b></td><td colspan="2"><b>${total.toLocaleString()} MMK</b></td></tr></table>`;
+                document.getElementById('report-content').innerHTML = onlineHtml + reportHtml;
+                document.getElementById('report-modal').style.display = 'block';
+            });
+        });
+    }
+
+    function printVoucher() {
+        db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
+            const d = snap.val(); if(!d) return;
+            document.getElementById('v-id').innerText = d.voucherId;
+            document.getElementById('v-bus').innerText = currentBusName;
+            document.getElementById('v-seat').innerText = selectedSeat;
+            document.getElementById('v-name').innerText = d.name;
+            document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
+            setTimeout(() => { window.print(); }, 500);
+        });
+    }
+
+    function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
+    function toggleSettings() {
+        const menu = document.getElementById('settings-menu');
+        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
+    }
+
+    function deleteAllData() {
+        const pw = prompt("အရောင်းမှတ်တမ်းများအားလုံးဖျက်ရန် Admin Password ရိုက်ပါ:");
+        if (!pw) return;
+        const user = auth.currentUser;
+        const credential = firebase.auth.EmailAuthProvider.credential(user.email, pw);
+        user.reauthenticateWithCredential(credential).then(() => {
+            if (confirm("မှတ်တမ်းအားလုံး ဖျက်ပစ်ပါမည်။ သေချာပါသလား?")) {
+                db.ref('bookings').remove().then(() => { alert("ဖျက်ပြီးပါပြီ။"); location.reload(); });
+            }
+        }).catch(() => alert("Password မှားယွင်းနေပါသည်။"));
+    }
+
+    function createTrip() {
+        const n = document.getElementById('bus-name').value, d = document.getElementById('bus-date').value;
+        if(n && d) db.ref('trips/' + Date.now()).set({ name: n, date: d }).then(() => {
+            alert("ခရီးစဉ် ဖန်တီးပြီးပါပြီ။");
+            document.getElementById('bus-name').value = '';
+        });
+    }
 </script>
 </body>
-                </html>
-                
+</html>
