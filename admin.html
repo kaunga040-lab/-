@@ -152,10 +152,10 @@
 </div>
 
 <script>
-    // Device ID သတ်မှတ်ခြင်း
+    // ၁။ Device ID သတ်မှတ်ခြင်း
     const deviceId = navigator.userAgent.replace(/\s+/g, '').slice(0, 30) + (window.screen.width + window.screen.height);
 
-    // Firebase Configuration (ပြင်ဆင်ပြီး)
+    // ၂။ Firebase Configuration
     const firebaseConfig = {
         apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
         authDomain: "a-gyi-kaung.firebaseapp.com",
@@ -166,13 +166,14 @@
         appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
     };
 
+    // ၃။ Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
-    // Login Function (အသစ်ပြန်ပြင်ထားသည်)
+    // ၄။ Login Function (ပိုမိုကောင်းမွန်အောင် ပြင်ထားသည်)
     window.login = function() {
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
@@ -188,6 +189,7 @@
                 const session = snap.val();
                 if (!session || session.currentDevice === deviceId) {
                     userRef.update({ currentDevice: deviceId, status: 'approved' }).then(() => {
+                        alert("Login အောင်မြင်ပါသည်။");
                         location.reload(); 
                     });
                 } else {
@@ -198,44 +200,17 @@
                     });
                     alert("အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...");
                 }
-            }).catch(e => {
-                alert("Database Error: " + e.message);
             });
         }).catch(error => { 
-            alert("Login Error: " + error.message); 
+            console.error(error);
+            alert("ဝင်ရောက်မှု မအောင်မြင်ပါ- " + error.message); 
         });
     };
-    
 
-    window.logout = function() { 
-        const user = auth.currentUser;
-        if(user) db.ref('user_sessions/' + user.uid).remove().then(() => auth.signOut());
-        else auth.signOut();
-    };
-
+    // ၅။ Auth State Watcher
     auth.onAuthStateChanged(user => {
         if (user) {
             userNick = user.email.split('@')[0].toUpperCase();
-            
-            // Device Approval Watcher
-            const userRef = db.ref('user_sessions/' + user.uid);
-            userRef.on('value', snap => {
-                const data = snap.val();
-                if (data) {
-                    if (data.status === 'pending' && data.currentDevice === deviceId) {
-                        if (confirm(`ဝန်ထမ်း ${data.requestUser} မှ အခြားစက်ဖြင့် ဝင်ရန် ကြိုးစားနေသည်။ ခွင့်ပြုမလား?`)) {
-                            userRef.update({ currentDevice: data.requestDevice, status: 'approved', requestDevice: null });
-                        } else {
-                            userRef.update({ status: 'approved', requestDevice: null });
-                        }
-                    }
-                    if (data.currentDevice !== deviceId) {
-                        auth.signOut();
-                        alert("သင့်အကောင့်ကို အခြားစက်တစ်ခုတွင် အသုံးပြုလိုက်ပါပြီ။");
-                    }
-                }
-            });
-
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             document.getElementById('user-display').innerText = "👤 Staff: " + userNick;
