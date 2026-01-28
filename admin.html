@@ -173,40 +173,30 @@
 
     let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
 
-    // ၄။ Login Function (ပိုမိုကောင်းမွန်အောင် ပြင်ထားသည်)
-    window.login = function() {
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        const errDisplay = document.getElementById('login-error');
-        
-        if(!email || !pass) { alert("Email နှင့် Password ဖြည့်ပါ"); return; }
+window.login = function() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-pass').value;
+    
+    console.log("Attempting login for:", email); // Debug လုပ်ရန်
 
-        auth.signInWithEmailAndPassword(email, pass).then(userCredential => {
-            const user = userCredential.user;
-            const userRef = db.ref('user_sessions/' + user.uid);
-            
-            userRef.once('value').then(snap => {
-                const session = snap.val();
-                if (!session || session.currentDevice === deviceId) {
-                    userRef.update({ currentDevice: deviceId, status: 'approved' }).then(() => {
-                        alert("Login အောင်မြင်ပါသည်။");
-                        location.reload(); 
-                    });
-                } else {
-                    userRef.update({ 
-                        requestDevice: deviceId, 
-                        status: 'pending', 
-                        requestUser: email.split('@')[0].toUpperCase() 
-                    });
-                    alert("အခြားစက်တွင် ဝင်ထားပါသည်။ ပထမစက်မှ ခွင့်ပြုချက်ပေးရန် စောင့်ပါ...");
-                }
-            });
-        }).catch(error => { 
-            console.error(error);
-            alert("ဝင်ရောက်မှု မအောင်မြင်ပါ- " + error.message); 
-        });
-    };
+    if(!email || !pass) { 
+        alert("Email နှင့် Password ဖြည့်ပါ"); 
+        return; 
+    }
 
+    auth.signInWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+        console.log("Login Success!");
+        alert("Login အောင်မြင်ပါသည်။");
+        // ဒီမှာ location.reload() မလုပ်ဘဲ ခဏစောင့်ကြည့်ပါ
+    })
+    .catch((error) => {
+        console.error("Login Error:", error.code, error.message);
+        alert("အမှား: " + error.message);
+    });
+};
+          
+    
     // ၅။ Auth State Watcher
     auth.onAuthStateChanged(user => {
         if (user) {
