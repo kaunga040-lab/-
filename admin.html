@@ -1,661 +1,138 @@
-<!DOCTYPE html>
-<html lang="my">
+<!DOCTYPE html><html lang="my">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AGK System - Trip Management</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <style>
-        :root { --primary: #1a237e; --secondary: #2e7d32; --danger: #f44336; --dark: #263238; --warning: #ffeb3b; }
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
-        .container { max-width: 550px; margin: auto; background: white; min-height: 100vh; padding-bottom: 50px; }
-        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top:0; z-index:100; }
-        .section { padding: 15px; border-bottom: 5px solid #f0f2f5; }
-        input, select { width: 100%; padding: 12px; margin: 5px 0 12px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        input:disabled { background: #eee; cursor: not-allowed; }
-        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; color: white; margin-top: 5px; font-size: 16px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
-        .bus-layout { background: var(--dark); padding: 20px; border-radius: 25px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 320px; margin: 20px auto; }
-        .seat { background: white; padding: 12px 0; text-align: center; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .seat.sold { background: var(--secondary); color: white; }
-        .seat.locked { background: var(--warning); color: #000; animation: pulse 1s infinite; border: 2px solid orange; }
-        .driver { background: #555; color: white; cursor: default; }
-        .last-row { grid-column: span 3; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 5px; }
-        #modal, #report-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; overflow-y: auto; }
-        .modal-content { background:white; width:92%; max-width: 450px; margin: 20px auto; padding:20px; border-radius:15px; color: #000; position: relative; }
-        #printable-voucher { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            #printable-voucher, #printable-voucher * { visibility: visible; }
-            #printable-voucher { display: block !important; position: absolute; left: 0; top: 0; width: 100%; background: white; }
-            .v-box { width: 75mm; margin: 0 auto; padding: 20px; font-size: 16px; text-align: center; color: black; border: none; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <div id="login-screen" style="padding: 100px 20px; text-align: center;">
-        <h2 style="color: var(--primary);">AGK System</h2>
-        <input type="email" id="login-email" placeholder="Email">
-        <input type="password" id="login-pass" placeholder="Password">
-        <button class="btn" style="background: var(--primary);" onclick="login()">Login / ဝင်ရောက်ရန်</button>
-        <p id="login-error" style="color: red; font-size: 12px; margin-top: 10px;"></p>
-    </div>
-
-    <div id="app-screen" style="display: none;">
-      <header>
-    <button onclick="openSettings()" style="position: absolute; left: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px 10px;">⚙️ Setting</button>
-    
-    <button onclick="logout()" style="position: absolute; right: 10px; top: 15px; background: rgba(255,255,255,0.2); border: 1px solid white; color: white; border-radius: 5px; padding: 5px 10px;">Logout</button>
-    <h3 style="margin:0;">AGK Ticketing</h3>
-    <div id="user-display" style="font-size: 12px; margin-top: 5px;"></div>
-</header>
-
-
-        <div id="admin-only-section" class="section" style="display: none; background: #e8f5e9;">
-            <button class="btn" style="background: #673ab7;" onclick="showReport()">📊 အရောင်းရီပို့ကြည့်ရန်</button>
-            <hr>
-            <input type="text" id="bus-name" placeholder="ကားလိုင်းအမည်">
-            <div style="display:flex; gap:5px;">
-                <input type="date" id="bus-date">
-                <input type="time" id="bus-time">
-            </div>
-            <button class="btn" style="background: var(--secondary);" onclick="createTrip()">Create Trip</button>
-        </div>
-
-        <div class="section" id="list-area">
-            <h4>📅 ခရီးစဉ်များ</h4>
-            <div id="bus-list"></div>
-        </div>
-
-        <div id="booking-area" class="section" style="display: none;">
-            <button class="btn" style="background:#555; width: auto;" onclick="hideBooking()">← Back</button>
-            <h3 id="target-bus-info" style="text-align:center;"></h3>
-            <div id="seat-map" class="bus-layout"></div>
-        </div>
-    </div>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AGK System - Trip Management</title><!-- Firebase --><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script><style>
+:root{--primary:#1a237e;--secondary:#2e7d32;--danger:#f44336;--dark:#263238;--warning:#ffeb3b}
+body{margin:0;font-family:sans-serif;background:#f0f2f5}
+.container{max-width:550px;margin:auto;background:#fff;min-height:100vh}
+header{background:var(--primary);color:#fff;padding:15px;text-align:center;position:sticky;top:0}
+.section{padding:15px}
+input,select{width:100%;padding:12px;margin-bottom:10px;border-radius:8px;border:1px solid #ccc}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;font-weight:bold;color:#fff;cursor:pointer}
+.bus-layout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:#263238;padding:20px;border-radius:20px}
+.seat{background:#fff;padding:10px;text-align:center;border-radius:6px;font-weight:bold;cursor:pointer}
+.seat.sold{background:#2e7d32;color:#fff}
+.seat.locked{background:#ffeb3b}
+.driver{background:#555;color:#fff}
+#modal,#settings-modal,#report-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999}
+.modal-content{background:#fff;margin:20px auto;padding:20px;border-radius:15px;width:92%;max-width:450px}
+</style></head>
+<body><div class="container"><!-- LOGIN --><div id="login-screen" style="padding:100px 20px;text-align:center">
+<h2>AGK System</h2>
+<input id="login-email" type="email" placeholder="Email" />
+<input id="login-pass" type="password" placeholder="Password" />
+<button class="btn" style="background:var(--primary)" onclick="login()">Login</button>
+<p id="login-error" style="color:red;font-size:12px"></p>
+</div><!-- APP --><div id="app-screen" style="display:none">
+<header>
+<button onclick="openSettings()" style="position:absolute;left:10px;top:15px">⚙️</button>
+<button onclick="logout()" style="position:absolute;right:10px;top:15px">Logout</button>
+<h3>AGK Ticketing</h3>
+<div id="user-display" style="font-size:12px"></div>
+</header><div id="admin-only" class="section" style="display:none;background:#e8f5e9">
+<input id="bus-name" placeholder="ကားလိုင်းအမည်" />
+<input id="bus-date" type="date" />
+<button class="btn" style="background:var(--secondary)" onclick="createTrip()">Create Trip</button>
+<button class="btn" style="background:#673ab7;margin-top:10px" onclick="showReport()">📊 Report</button>
+</div><div id="list-area" class="section">
+<h4>ခရီးစဉ်များ</h4>
+<div id="bus-list"></div>
+</div><div id="booking-area" class="section" style="display:none">
+<button onclick="backToList()">← Back</button>
+<h3 id="bus-title"></h3>
+<div id="seat-map" class="bus-layout"></div>
 </div>
-
-<div id="modal">
-    <div class="modal-content">
-        <h3 id="seat-label" style="text-align: center;"></h3>
-        <input type="text" id="c-name" placeholder="အမည်">
-        <input type="text" id="c-nrc" placeholder="မှတ်ပုံတင်">     
-        <input type="tel" id="c-phone" placeholder="ဖုန်း">
-        <input type="number" id="c-price" placeholder="လက်မှတ်ခ">
-        <select id="c-method">
-            <option value="Cash">Cash</option>
-            <option value="KPay">KPay</option>
-            <option value="Unpaid">Unpaid</option>
-        </select>
-        <input type="text" id="c-pickup" placeholder="စီးမည့်နေရာ">
-        <p id="sold-by-info" style="font-size: 13px; color: blue; font-weight: bold; text-align: center;"></p>
-        <div id="modal-btns"></div>
-        <button class="btn" style="background:#888; margin-top:10px;" onclick="closeModal()">Close</button>
-    </div>
 </div>
+</div><!-- MODAL --><div id="modal"><div class="modal-content">
+<h3 id="seat-label"></h3>
+<input id="c-name" placeholder="အမည်" />
+<input id="c-phone" placeholder="ဖုန်း" />
+<input id="c-price" placeholder="ဈေး" />
+<button class="btn" style="background:var(--secondary)" onclick="saveBooking()">Save</button>
+<button class="btn" style="background:#888;margin-top:10px" onclick="closeModal()">Close</button>
+</div></div><script>
+// Firebase
+firebase.initializeApp({
+apiKey:"AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
+authDomain:"a-gyi-kaung.firebaseapp.com",
+databaseURL:"https://a-gyi-kaung-default-rtdb.firebaseio.com",
+projectId:"a-gyi-kaung",
+appId:"1:1002724874482:web:7b08378f45b237cc3f986b"
+});
 
-<div id="settings-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1001; overflow-y: auto;">
-    <div class="modal-content">
-        <h3 style="text-align: center;">⚙️ Settings</h3>
-        <hr>
-        
-        <div id="change-pw-section">
-            <h4 style="margin-bottom:10px;">Password ပြောင်းလဲရန်</h4>
-            <input type="password" id="old-pass" placeholder="Password အဟောင်း">
-            <input type="password" id="new-pass" placeholder="Password အသစ်">
-            <input type="password" id="confirm-new-pass" placeholder="Password ထပ်ရိုက်ပါ">
-            <button class="btn" style="background: var(--secondary);" onclick="changePassword()">Update Password</button>
-        </div>
+const auth=firebase.auth();
+const db=firebase.database();
+let currentTrip=null,selectedSeat=null,userNick="";
 
-        <hr style="margin: 20px 0; border: 0.5px solid #eee;">
-
-        <div id="user-management-section">
-            <h4 style="margin-bottom:10px;">➕ ကိုယ်စားလှယ်အသစ်ထည့်ရန်</h4>
-            <input type="email" id="new-user-email" placeholder="Email (ဥပမာ- staff1@agk.com)">
-            <input type="password" id="new-user-pass" placeholder="Password သတ်မှတ်ပါ">
-            <button class="btn" style="background: var(--primary);" onclick="createNewUser()">အကောင့်ဖွင့်ပေးမည်</button>
-        </div>
-
-        <button class="btn" style="background:#888; margin-top:20px;" onclick="closeSettings()">ပိတ်ပါ</button>
-    </div>
-</div>
-
-<div id="report-modal">
-
-    <div class="modal-content">
-        <button onclick="toggleSettings()" style="position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 20px;">⚙️</button>
-        <h3 style="text-align: center;">📊 Daily Report</h3>
-        <div id="settings-menu" style="display:none; background: #fff3f3; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
-            <button class="btn" style="background: var(--danger); font-size: 12px;" onclick="deleteAllData()">အရောင်းမှတ်တမ်းများအားလုံးဖျက်မည်</button>
-        </div>
-        <div id="report-content"></div>
-        <button class="btn" style="background: var(--danger); margin-top: 15px;" onclick="closeReport()">ပိတ်ပါ</button>
-    </div>
-</div>
-
-<div id="printable-voucher">
-    <div class="v-box">
-        <h2 style="margin:0;">A GYI KAUNG</h2>
-        <hr style="border: 1px dashed #000;">
-        <div style="text-align:left; line-height: 1.8;">
-            Voucher: <b id="v-id"></b><br>
-            Trip: <span id="v-bus"></span><br>
-            Seat: <b id="v-seat" style="font-size: 22px;"></b><br>
-            Name: <span id="v-name"></span><br>
-            Price: <span id="v-price"></span> MMK
-        </div>
-    </div>
-</div>
-
-<script>
-    // ၁။ Device ID သတ်မှတ်ခြင်း
-    const deviceId = navigator.userAgent.replace(/\s+/g, '').slice(0, 30) + (window.screen.width + window.screen.height);
-
-    // ၂။ Firebase Configuration
-    const firebaseConfig = {
-        apiKey: "AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
-        authDomain: "a-gyi-kaung.firebaseapp.com",
-        databaseURL: "https://a-gyi-kaung-default-rtdb.firebaseio.com", 
-        projectId: "a-gyi-kaung",
-        storageBucket: "a-gyi-kaung.firebasestorage.app",
-        messagingSenderId: "1002724874482",
-        appId: "1:1002724874482:web:7b08378f45b237cc3f986b"
-    };
-
-    // ၃။ Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-
-    let currentTripId = null, selectedSeat = null, userNick = "", currentBusName = "";
-
-window.login = function() {
-    const email = document.getElementById('login-email').value;
-    const pass = document.getElementById('login-pass').value;
-    
-    console.log("Attempting login for:", email); // Debug လုပ်ရန်
-
-    if(!email || !pass) { 
-        alert("Email နှင့် Password ဖြည့်ပါ"); 
-        return; 
-    }
-
-    auth.signInWithEmailAndPassword(email, pass)
-    .then((userCredential) => {
-        console.log("Login Success!");
-        alert("Login အောင်မြင်ပါသည်။");
-        // ဒီမှာ location.reload() မလုပ်ဘဲ ခဏစောင့်ကြည့်ပါ
-    })
-    .catch((error) => {
-        console.error("Login Error:", error.code, error.message);
-        alert("အမှား: " + error.message);
-    });
-};
-          
-    
-    // ၅။ Auth State Watcher
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            userNick = user.email.split('@')[0].toUpperCase();
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('user-display').innerText = "👤 Staff: " + userNick;
-            if(user.email === 'admin@agk.com') document.getElementById('admin-only-section').style.display = 'block';
-            loadTrips();
-        } else {
-            document.getElementById('login-screen').style.display = 'block';
-            document.getElementById('app-screen').style.display = 'none';
-        }
-    });
-
-function loadTrips() {
-    db.ref('trips').on('value', snap => {
-        const data = snap.val();
-        let html = '';
-        const isAdmin = auth.currentUser && auth.currentUser.email === 'admin@agk.com';
-        
-        if (!data) {
-            document.getElementById('bus-list').innerHTML = '<p style="text-align:center; color:#888;">ခရီးစဉ်မရှိပါ။</p>';
-            return;
-        }
-
-        // ၁။ Object ကို Array ပြောင်းပြီး Date အလိုက် Sort စီခြင်း
-        const tripList = [];
-        for (let id in data) {
-            tripList.push({ id: id, ...data[id] });
-        }
-
-        // ၂။ Date အလိုက် အစောဆုံးရက်က အပေါ်ဆုံးရောက်အောင် စီမည်
-        tripList.sort((a, b) => new Date(a.date) - new Date(b.date));
-
-        // ၃။ စီထားသော Array ကို HTML အဖြစ် ပြောင်းလဲခြင်း
-        tripList.forEach(trip => {
-            html += `<div class="section" style="background:white; margin-bottom:10px; border-radius:12px; border:1px solid #eee; padding: 15px; position: relative;">
-                <div onclick="showBooking('${trip.id}', '${trip.name}')" style="cursor:pointer; padding-right: 80px;">
-                    <strong>🚌 ${trip.name}</strong><br><small>📅 ရက်စွဲ: ${trip.date}</small>
-                </div>
-                ${isAdmin ? `<button onclick="deleteTrip('${trip.id}', '${trip.name}')" style="position:absolute; right:15px; top:50%; transform:translateY(-50%); background:var(--danger); color:white; border:none; border-radius:6px; padding:8px 10px; cursor:pointer; font-size:12px;">ဖျက်မည်</button>` : ''}
-            </div>`;
-        });
-
-        document.getElementById('bus-list').innerHTML = html;
-    });
+// LOGIN
+function login(){
+const e=document.getElementById('login-email').value;
+const p=document.getElementById('login-pass').value;
+const err=document.getElementById('login-error');
+err.innerText="";
+if(!e||!p){err.innerText="Email နှင့် Password ဖြည့်ပါ";return}
+auth.signInWithEmailAndPassword(e,p).catch(er=>err.innerText=er.message);
 }
-    
 
-function deleteTrip(tripId, tripName) {
-    const pw = prompt(`⚠️ "${tripName}" ကို ဖျက်ရန် သင်၏ Login Password ရိုက်ထည့်ပါ:`);
-    if (!pw) return;
+function logout(){auth.signOut()}
 
-    const user = auth.currentUser;
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email, pw);
-
-    // Password မှန်မမှန် Firebase မှာ ပြန်စစ်ဆေးခြင်း (Re-authenticate)
-    user.reauthenticateWithCredential(credential).then(() => {
-        if (confirm(`အတည်ပြုပါသလား? ခရီးစဉ်ကိုသာ ဖျက်ပါမည်။ အရောင်းမှတ်တမ်းများ ကျန်နေပါမည်။`)) {
-            db.ref(`trips/${tripId}`).remove();
-            db.ref(`active_sessions/${tripId}`).remove();
-            alert("ဖျက်ပြီးပါပြီ။");
-        }
-    }).catch(error => {
-        alert("Password မှားယွင်းနေပါသည်။");
-    });
+// AUTH WATCHER
+auth.onAuthStateChanged(u=>{
+if(u){
+userNick=u.email.split('@')[0].toUpperCase();
+document.getElementById('login-screen').style.display='none';
+document.getElementById('app-screen').style.display='block';
+document.getElementById('user-display').innerText='👤 '+userNick;
+if(u.email==='admin@agk.com')document.getElementById('admin-only').style.display='block';
+loadTrips();
+}else{
+document.getElementById('login-screen').style.display='block';
+document.getElementById('app-screen').style.display='none';
 }
-    
-                       
-    function showBooking(id, name) {
-        currentTripId = id; currentBusName = name;
-        document.getElementById('list-area').style.display = 'none';
-        document.getElementById('booking-area').style.display = 'block';
-        document.getElementById('target-bus-info').innerText = name;
-        renderSeats(id);
-    }
+});
 
-    function hideBooking() { releaseLock(); document.getElementById('list-area').style.display = 'block'; document.getElementById('booking-area').style.display = 'none'; }
+// TRIPS
+function createTrip(){
+const n=bus-name.value,d=bus-date.value;
+if(!n||!d)return alert('အချက်အလက်ပြည့်စုံပါ');
+db.ref('trips/'+Date.now()).set({name:n,date:d});
+}
 
-    function renderSeats(tripId) {
-    db.ref(`bookings/${tripId}`).on('value', bSnap => {
-        const booked = bSnap.val() || {};
-        db.ref(`active_sessions/${tripId}`).on('value', lSnap => {
-            const locks = lSnap.val() || {};
-            const map = document.getElementById('seat-map'); map.innerHTML = '';
-            const layout = [['A1', 'A2', 'Driver'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], ['D1', 'D2', 'D3'], ['E1', 'E2', 'E3', 'E4']];
-            
-            const now = Date.now();
-            const lockTimeout = 5 * 60 * 1000; // ၅ မိနစ် (5 minutes in milliseconds)
+function loadTrips(){
+db.ref('trips').on('value',s=>{
+let h='';const d=s.val()||{};
+Object.keys(d).forEach(id=>{
+h+=`<div onclick="openTrip('${id}','${d[id].name}')">🚌 ${d[id].name} (${d[id].date})</div>`});
+bus-list.innerHTML=h||'မရှိပါ';
+});
+}
 
-            layout.forEach((row, idx) => {
-                const rowDiv = document.createElement('div');
-                if(idx === 4) rowDiv.className = 'last-row';
-                row.forEach(s => {
-                    const div = document.createElement('div');
-                    const isSold = booked[s];
-                    
-                    // Lock ရှိမရှိ စစ်ဆေးခြင်း (အချိန်ကျော်နေရင် Lock မရှိသလို သတ်မှတ်မယ်)
-                    let isLocked = false;
-                    if (locks[s] && locks[s].user !== userNick) {
-                        const lockTime = locks[s].time || 0;
-                        if (now - lockTime < lockTimeout) {
-                            isLocked = true;
-                        }
-                    }
+function openTrip(id,name){currentTrip=id;bus-title.innerText=name;list-area.style.display='none';booking-area.style.display='block';renderSeats()}
+function backToList(){booking-area.style.display='none';list-area.style.display='block'}
 
-                    div.className = s === 'Driver' ? 'seat driver' : `seat ${isSold ? 'sold' : ''} ${isLocked ? 'locked' : ''}`;
-                    div.innerText = s;
-                    
-                    if(s !== 'Driver') {
-                        div.onclick = () => isLocked ? alert("ဝန်ထမ်း " + locks[s].user + " ဝင်နေသည်") : openModal(s, isSold);
-                    }
-                    
-                    if(idx === 4) rowDiv.appendChild(div); else map.appendChild(div);
-                });
-                if(idx === 4) map.appendChild(rowDiv);
-            });
-        });
-    });
-    }
-    
-    // ဝန်ထမ်းအချင်းချင်း ပြင်ခွင့်ကန့်သတ်ထားသော Modal Function
-    function openModal(s, data) {
-    selectedSeat = s;
-    const lockRef = db.ref(`active_sessions/${currentTripId}/${s}`);
+function renderSeats(){
+const seats=['A1','A2','B1','B2','B3','C1','C2','C3'];
+db.ref('bookings/'+currentTrip).once('value',s=>{
+seat-map.innerHTML='';const d=s.val()||{};
+seats.forEach(se=>{
+const div=document.createElement('div');
+div.className='seat '+(d[se]?'sold':'');
+div.innerText=se;
+div.onclick=()=>openSeat(se,d[se]);
+seat-map.appendChild(div);
+});
+});
+}
 
-    // (၁) အချိန်နဲ့ နာမည်ကို သိမ်းပြီး အင်တာနက်ပြတ်ရင် Lock ဖြုတ်ဖို့ သတ်မှတ်ခြင်း
-    lockRef.set({ 
-        user: userNick,
-        time: Date.now() 
-    });
-    lockRef.onDisconnect().remove();
+function openSeat(se,data){selectedSeat=se;seat-label.innerText='Seat '+se;if(data){c-name.value=data.name;c-phone.value=data.phone;c-price.value=data.price}else{c-name.value=c-phone.value=c-price.value=''};modal.style.display='block'}
+function closeModal(){modal.style.display='none'}
 
-    document.getElementById('seat-label').innerText = "ခုံ: " + s;
-    
-    // (၂) Input Field များထဲသို့ Data ဖြည့်ခြင်း
-    const fields = { name: 'c-name', nrc: 'c-nrc', phone: 'c-phone', price: 'c-price', method: 'c-method', pickup: 'c-pickup' };
-    for(let key in fields) {
-        document.getElementById(fields[key]).value = data ? (data[key] || '') : (key === 'method' ? 'Cash' : '');
-    }
-
-    // (၃) လုပ်ပိုင်ခွင့် စစ်ဆေးခြင်း (Admin သို့မဟုတ် ခုံရောင်းသူ ဖြစ်မှ ပြင်ခွင့်ပေးမည်)
-    const soldBy = data ? data.soldBy : null;
-    const isAdmin = auth.currentUser.email === 'admin@agk.com';
-    const isOwner = soldBy === userNick;
-    const canEdit = !data || isAdmin || isOwner;
-
-    // Input များကို ဖွင့်/ပိတ် လုပ်ခြင်း
-    for(let key in fields) {
-        document.getElementById(fields[key]).disabled = !canEdit;
-    }
-    document.getElementById('sold-by-info').innerText = data ? "Sold By: " + (soldBy || "-") : "";
-
-    // (၄) ခလုတ်များ ပြသခြင်း
-    let btns = `<button class="btn" style="background:var(--secondary);" onclick="saveBooking()">Save</button>`;
-    if(data) {
-        btns = `<button class="btn" style="background:#ff9800;" onclick="printVoucher()">Print</button>`;
-        if(canEdit) {
-            btns += `<button class="btn" style="background:blue; margin-top:5px;" onclick="saveBooking()">Update</button>`;
-            btns += `<button class="btn" style="background:red; margin-top:5px;" onclick="deleteBooking()">Delete</button>`;
-        } else {
-            btns += `<p style="color:red; font-size:12px; margin-top:5px; font-weight:bold; text-align:center;">
-                        ⚠️ ဤခုံကို ${soldBy} မှ ရောင်းထားသဖြင့် သင်ပြင်၍မရပါ။
-                     </p>`;
-        }
-    }
-    document.getElementById('modal-btns').innerHTML = btns;
-    document.getElementById('modal').style.display = 'block';
-    }
-        
-    function saveBooking() {
-        const name = document.getElementById('c-name').value, phone = document.getElementById('c-phone').value, price = document.getElementById('c-price').value;
-        if(!name || !phone || !price) return alert("အချက်အလက်ဖြည့်ပါ");
-        db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
-            name, nrc: document.getElementById('c-nrc').value, phone, price, method: document.getElementById('c-method').value,
-            pickup: document.getElementById('c-pickup').value, soldBy: userNick, busName: currentBusName, voucherId: "V" + Date.now().toString().slice(-6)
-        }).then(() => closeModal());
-    }
-
-    function releaseLock() { if(selectedSeat && currentTripId) db.ref(`active_sessions/${currentTripId}/${selectedSeat}`).remove(); }
-    function closeModal() { releaseLock(); document.getElementById('modal').style.display = 'none'; }
-    function deleteBooking() { if(confirm("ဖျက်မှာလား?")) { db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove(); closeModal(); } }
-
-    function printVoucher() {
-        db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
-            const d = snap.val(); if(!d) return;
-            document.getElementById('v-id').innerText = d.voucherId;
-            document.getElementById('v-bus').innerText = currentBusName;
-            document.getElementById('v-seat').innerText = selectedSeat;
-            document.getElementById('v-name').innerText = d.name;
-            document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
-            setTimeout(() => { window.print(); }, 500);
-        });
-    }
-function showReport() {
-    // ၁။ အွန်လိုင်းရှိနေသူများကို အရင်ယူမယ်
-    db.ref('user_sessions').once('value', uSnap => {
-        const onlineUsers = uSnap.val() || {};
-        let onlineHtml = '<h4>🟢 လက်ရှိအွန်လိုင်းရှိသူများ</h4><ul style="font-size:14px; color:green;">';
-        for(let uid in onlineUsers) {
-            onlineHtml += `<li>${onlineUsers[uid].requestUser || 'Staff'} (Active)</li>`;
-        }
-        onlineHtml += '</ul><hr>';
-
-        // ၂။ အရောင်းစာရင်းများကို တွက်ချက်မယ်
-        db.ref('bookings').once('value', snap => {
-            const allTrips = snap.val() || {};
-            let staffStats = {}; // ဝန်ထမ်းအလိုက် စာရင်း
-            let totalSum = 0;
-            let totalCount = 0;
-
-            for (let tid in allTrips) {
-                for (let sid in allTrips[tid]) {
-                    const b = allTrips[tid][sid];
-                    const seller = b.soldBy || "Unknown";
-                    
-                    if (!staffStats[seller]) {
-                        staffStats[seller] = { count: 0, sum: 0, seats: [] };
-                    }
-                    staffStats[seller].count++;
-                    staffStats[seller].sum += Number(b.price || 0);
-                    staffStats[seller].seats.push(`${sid}(${b.busName || 'စုံ'})`);
-                    
-                    totalCount++;
-                    totalSum += Number(b.price || 0);
-                }
-            }
-
-            let reportHtml = `<b>💰 စုစုပေါင်းရောင်းရငွေ: ${totalSum.toLocaleString()} MMK (${totalCount} ခုံ)</b><hr>`;
-            
-            for (let staff in staffStats) {
-                reportHtml += `
-                <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-bottom:10px; border-left:4px solid var(--primary);">
-                    <strong style="color:var(--primary);">👤 ဝန်ထမ်း: ${staff}</strong><br>
-                    <span>🎟️ ရောင်းရခုံ: ${staffStats[staff].count} ခုံ</span><br>
-                    <span>💵 ရရှိငွေ: ${staffStats[staff].sum.toLocaleString()} MMK</span><br>
-                    <small style="color:#666; word-break:break-all;">📍 ရောင်းထားသောခုံများ: ${staffStats[staff].seats.join(', ')}</small>
-                </div>`;
-            }
-
-            document.getElementById('report-content').innerHTML = onlineHtml + reportHtml;
-            document.getElementById('report-modal').style.display = 'block';
-        });
-    });
-                }
-    
-
-    function createTrip() {
-        const n = document.getElementById('bus-name').value, d = document.getElementById('bus-date').value;
-        if(n && d) db.ref('trips/' + Date.now()).set({ name: n, date: d });
-    }
-    function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
-    function toggleSettings() { const m = document.getElementById('settings-menu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
-   
-    function deleteAllData() {
-    const pw = prompt("အရောင်းမှတ်တမ်းများ (Bookings) အားလုံးကို အပြီးတိုင်ဖျက်ရန် သင်၏ Login Password ရိုက်ပါ:");
-    if (!pw) return;
-
-    const user = auth.currentUser;
-    const credential = firebase.auth.EmailAuthProvider.credential(user.email, pw);
-
-    user.reauthenticateWithCredential(credential).then(() => {
-        if(confirm("ဤလုပ်ဆောင်ချက်သည် အရောင်းရီပို့အားလုံးကို ရှင်းလင်းပစ်မည်။ သေချာပါသလား?")) {
-            db.ref('bookings').remove().then(() => {
-                alert("မှတ်တမ်းများ အားလုံး ဖျက်ပြီးပါပြီ။");
-                closeReport();
-            });
-        }
-    }).catch(error => {
-        alert("Password မှားယွင်းနေပါသည်။");
-    });
-    }
-    // --- (၁) Setting Modal ဖွင့်ရန်/ပိတ်ရန် (Header က Setting ခလုတ်အတွက်) ---
-    function openSettings() { 
-        document.getElementById('settings-modal').style.display = 'block'; 
-        
-        // Admin ဟုတ်မဟုတ် စစ်ပြီး User Management Form ကို ပြခြင်း/ဖျောက်ခြင်း
-        const user = auth.currentUser;
-        db.ref('admins/' + user.uid).once('value', snap => {
-            const userMgmt = document.getElementById('user-management-section');
-            if (snap.exists()) {
-                userMgmt.style.display = 'block'; // Admin ဖြစ်လျှင်ပြမည်
-            } else {
-                userMgmt.style.display = 'none';  // ဝန်ထမ်းဖြစ်လျှင်ဖျောက်မည်
-            }
-        });
-    }
-
-    function closeSettings() { 
-        document.getElementById('settings-modal').style.display = 'none'; 
-    }
-
-    // --- (၂) Report Modal ထဲက Setting ဖွင့်ရန်/ပိတ်ရန် (Data ဖျက်ရန်အတွက်) ---
-    function toggleSettings() {
-        const menu = document.getElementById('settings-menu');
-        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
-
-        // --- (၁) Booking သိမ်းဆည်းခြင်း/ဖျက်ခြင်း ---
-    function saveBooking() {
-        const name = document.getElementById('c-name').value;
-        const nrc = document.getElementById('c-nrc').value;
-        const phone = document.getElementById('c-phone').value;
-        const price = document.getElementById('c-price').value;
-        const method = document.getElementById('c-method').value;
-        const pickup = document.getElementById('c-pickup').value;
-
-        if (!name || !phone || !price) return alert("အမည်၊ ဖုန်းနှင့် ဈေးနှုန်း ဖြည့်စွက်ပါ");
-
-        db.ref(`bookings/${currentTripId}/${selectedSeat}`).update({
-            name, nrc, phone, price, method, pickup,
-            soldBy: userNick,
-            busName: currentBusName,
-            voucherId: "V" + Date.now().toString().slice(-6),
-            time: Date.now()
-        }).then(() => closeModal());
-    }
-
-    function deleteBooking() {
-        if (confirm("ဤခုံစာရင်းကို ဖျက်ရန် သေချာပါသလား?")) {
-            db.ref(`bookings/${currentTripId}/${selectedSeat}`).remove().then(() => closeModal());
-        }
-    }
-
-    function closeModal() { releaseLock(); document.getElementById('modal').style.display = 'none'; }
-    function releaseLock() { if (selectedSeat && currentTripId) db.ref(`active_sessions/${currentTripId}/${selectedSeat}`).remove(); }
-
-    // --- (၂) Setting Functions (Admin စစ်ဆေးခြင်း ပါဝင်သည်) ---
-    function openSettings() { 
-        document.getElementById('settings-modal').style.display = 'block'; 
-        const user = auth.currentUser;
-        // Database ရှိ admins node ထဲတွင် လက်ရှိ user ရှိမရှိ စစ်ဆေးခြင်း
-        db.ref('admins/' + user.uid).once('value', snap => {
-            const userMgmt = document.getElementById('user-management-section');
-            if (snap.exists()) {
-                userMgmt.style.display = 'block'; // Admin ဖြစ်လျှင် ကိုယ်စားလှယ်သစ်ထည့်ရန်အပိုင်းကို ပြမည်
-            } else {
-                userMgmt.style.display = 'none';  // ဝန်ထမ်းဖြစ်လျှင် ဖျောက်ထားမည်
-            }
-        });
-    }
-
-    function closeSettings() { 
-        document.getElementById('settings-modal').style.display = 'none'; 
-    }
-
-    function changePassword() {
-        const oldPw = document.getElementById('old-pass').value;
-        const newPw = document.getElementById('new-pass').value;
-        const confirmNew = document.getElementById('confirm-new-pass').value;
-
-        if (!oldPw || !newPw || !confirmNew) return alert("အချက်အလက်အားလုံး ဖြည့်စွက်ပါ");
-        if (newPw !== confirmNew) return alert("Password အသစ်နှစ်ခု မကိုက်ညီပါ");
-        if (newPw.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
-
-        const user = auth.currentUser;
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, oldPw);
-
-        user.reauthenticateWithCredential(credential).then(() => {
-            user.updatePassword(newPw).then(() => {
-                alert("Password ပြောင်းလဲပြီးပါပြီ။");
-                closeSettings();
-            }).catch(error => alert("အမှား: " + error.message));
-        }).catch(() => alert("Password အဟောင်း မှားယွင်းနေပါသည်။"));
-    }
-
-    function createNewUser() {
-        const email = document.getElementById('new-user-email').value;
-        const pass = document.getElementById('new-user-pass').value;
-
-        if (!email || !pass) return alert("Email နှင့် Password ဖြည့်ပါ");
-        if (pass.length < 6) return alert("Password သည် အနည်းဆုံး ၆ လုံး ရှိရပါမည်");
-
-        firebase.auth().createUserWithEmailAndPassword(email, pass).then((u) => {
-            db.ref('users/' + u.user.uid).set({
-                email: email, role: 'staff', createdAt: Date.now()
-            });
-            alert("ကိုယ်စားလှယ်သစ် " + email + " ကို ထည့်သွင်းပြီးပါပြီ။");
-            document.getElementById('new-user-email').value = '';
-            document.getElementById('new-user-pass').value = '';
-        }).catch(error => alert("အမှား: " + error.message));
-    }
-
-    // --- (၃) Report & Print Functions ---
-    function showReport() {
-        db.ref('user_sessions').once('value', uSnap => {
-            const onlineUsers = uSnap.val() || {};
-            let onlineHtml = '<h4>🟢 လက်ရှိအွန်လိုင်း</h4><ul style="font-size:14px; color:green;">';
-            for(let uid in onlineUsers) onlineHtml += `<li>${onlineUsers[uid].requestUser || 'Staff'}</li>`;
-            onlineHtml += '</ul><hr>';
-
-            db.ref('bookings').once('value', snap => {
-                const all = snap.val() || {};
-                let reportHtml = '<table style="width:100%; font-size:12px; border-collapse:collapse;" border="1"><tr><th>Trips</th><th>Seat</th><th>Price</th><th>Staff</th></tr>';
-                let total = 0;
-                for (let tId in all) {
-                    for (let sId in all[tId]) {
-                        const b = all[tId][sId];
-                        reportHtml += `<tr><td>${b.busName || 'စုံ'}</td><td>${sId}</td><td>${Number(b.price).toLocaleString()}</td><td>${b.soldBy}</td></tr>`;
-                        total += parseInt(b.price || 0);
-                    }
-                }
-                reportHtml += `<tr><td colspan="2"><b>စုစုပေါင်း</b></td><td colspan="2"><b>${total.toLocaleString()} MMK</b></td></tr></table>`;
-                document.getElementById('report-content').innerHTML = onlineHtml + reportHtml;
-                document.getElementById('report-modal').style.display = 'block';
-            });
-        });
-    }
-
-    function printVoucher() {
-        db.ref(`bookings/${currentTripId}/${selectedSeat}`).once('value', snap => {
-            const d = snap.val(); if(!d) return;
-            document.getElementById('v-id').innerText = d.voucherId;
-            document.getElementById('v-bus').innerText = currentBusName;
-            document.getElementById('v-seat').innerText = selectedSeat;
-            document.getElementById('v-name').innerText = d.name;
-            document.getElementById('v-price').innerText = Number(d.price).toLocaleString();
-            setTimeout(() => { window.print(); }, 500);
-        });
-    }
-
-    function closeReport() { document.getElementById('report-modal').style.display = 'none'; }
-    function toggleSettings() {
-        const menu = document.getElementById('settings-menu');
-        menu.style.display = (menu.style.display === 'none') ? 'block' : 'none';
-    }
-
-    function deleteAllData() {
-        const pw = prompt("အရောင်းမှတ်တမ်းများအားလုံးဖျက်ရန် Admin Password ရိုက်ပါ:");
-        if (!pw) return;
-        const user = auth.currentUser;
-        const credential = firebase.auth.EmailAuthProvider.credential(user.email, pw);
-        user.reauthenticateWithCredential(credential).then(() => {
-            if (confirm("မှတ်တမ်းအားလုံး ဖျက်ပစ်ပါမည်။ သေချာပါသလား?")) {
-                db.ref('bookings').remove().then(() => { alert("ဖျက်ပြီးပါပြီ။"); location.reload(); });
-            }
-        }).catch(() => alert("Password မှားယွင်းနေပါသည်။"));
-    }
-
-        function createTrip() {
-        const n = document.getElementById('bus-name').value;
-        const d = document.getElementById('bus-date').value;
-        
-        if(n && d) {
-            // ခရီးစဉ်အသစ်ကို Database သို့ ပို့ခြင်း
-            db.ref('trips/' + Date.now()).set({ 
-                name: n, 
-                date: d 
-            }).then(() => {
-                alert("ခရီးစဉ် ဖန်တီးပြီးပါပြီ။");
-                // ဖြည့်ထားတဲ့ စာသားတွေကို ပြန်ဖျက်ပေးခြင်း (Reset fields)
-                document.getElementById('bus-name').value = '';
-                document.getElementById('bus-date').value = '';
-            });
-        } else {
-            alert("ကားလိုင်းအမည်နှင့် ရက်စွဲကို ပြည့်စုံစွာ ဖြည့်ပါ");
-        }
-    }
-    
-</script>
-</body>
-</html>
+function saveBooking(){
+const n=c-name.value,p=c-phone.value,pr=c-price.value;
+if(!n||!p||!pr)return alert('ပြည့်စုံပါ');
+db.ref(`bookings/${currentTrip}/${selectedSeat}`).set({name:n,phone:p,price:pr,soldBy:userNick});
+closeModal();renderSeats();
+}
+</script></body>
+             </html>
