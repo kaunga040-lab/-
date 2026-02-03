@@ -13,12 +13,11 @@ input,select{width:100%;padding:12px;margin-bottom:10px;border-radius:8px;border
 .bus-layout{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:#263238;padding:20px;border-radius:20px}
 .seat{background:#fff;padding:10px;text-align:center;border-radius:6px;font-weight:bold;cursor:pointer}
 .seat.sold{background:#2e7d32;color:#fff}
-.seat.locked{background:#ffeb3b}
-.driver{background:#555;color:#fff}
-#modal,#settings-modal,#report-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999}
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999}
 .modal-content{background:#fff;margin:20px auto;padding:20px;border-radius:15px;width:92%;max-width:450px}
 </style></head>
-<body><div class="container"><!-- LOGIN --><div id="login-screen" style="padding:100px 20px;text-align:center">
+<body>
+<div class="container"><!-- LOGIN --><div id="login-screen" style="padding:100px 20px;text-align:center">
 <h2>AGK System</h2>
 <input id="login-email" type="email" placeholder="Email" />
 <input id="login-pass" type="password" placeholder="Password" />
@@ -44,14 +43,16 @@ input,select{width:100%;padding:12px;margin-bottom:10px;border-radius:8px;border
 <div id="seat-map" class="bus-layout"></div>
 </div>
 </div>
-</div><!-- MODAL --><div id="modal"><div class="modal-content">
+</div><!-- MODAL --><div id="modal">
+<div class="modal-content">
 <h3 id="seat-label"></h3>
 <input id="c-name" placeholder="အမည်" />
-<input id="c-phone" placeholder="ဖုန်း" />
-<input id="c-price" placeholder="ဈေး" />
+<input id="c-phone" type="tel" placeholder="ဖုန်း" />
+<input id="c-price" type="number" placeholder="ဈေး" />
 <button class="btn" style="background:var(--secondary)" onclick="saveBooking()">Save</button>
 <button class="btn" style="background:#888;margin-top:10px" onclick="closeModal()">Close</button>
-</div></div><script>
+</div>
+</div><script>
 // Firebase
 firebase.initializeApp({
 apiKey:"AIzaSyCOMmiWvHADYvb4ILURBeRo7YDh-Z1sknw",
@@ -61,30 +62,35 @@ projectId:"a-gyi-kaung",
 appId:"1:1002724874482:web:7b08378f45b237cc3f986b"
 });
 
-const auth=firebase.auth();
-const db=firebase.database();
-let currentTrip=null,selectedSeat=null,userNick="";
+const auth = firebase.auth();
+const db = firebase.database();
+let currentTrip = null;
+let selectedSeat = null;
+let userNick = "";
 
-// LOGIN
 function login(){
-const e=document.getElementById('login-email').value;
-const p=document.getElementById('login-pass').value;
-const err=document.getElementById('login-error');
-err.innerText="";
-if(!e||!p){err.innerText="Email နှင့် Password ဖြည့်ပါ";return}
+const e = document.getElementById('login-email').value;
+const p = document.getElementById('login-pass').value;
+const err = document.getElementById('login-error');
+err.innerText = "";
+if(!e || !p){ err.innerText="Email နှင့် Password ဖြည့်ပါ"; return; }
 auth.signInWithEmailAndPassword(e,p).catch(er=>err.innerText=er.message);
 }
 
-function logout(){auth.signOut()}
+function logout(){ auth.signOut(); }
 
-// AUTH WATCHER
+function openSettings(){ alert('Settings မရှိသေးပါ'); }
+function showReport(){ alert('Report မရှိသေးပါ'); }
+
 auth.onAuthStateChanged(u=>{
 if(u){
-userNick=u.email.split('@')[0].toUpperCase();
+userNick = u.email.split('@')[0].toUpperCase();
 document.getElementById('login-screen').style.display='none';
 document.getElementById('app-screen').style.display='block';
 document.getElementById('user-display').innerText='👤 '+userNick;
-if(u.email==='admin@agk.com')document.getElementById('admin-only').style.display='block';
+if(u.email==='admin@agk.com'){
+document.getElementById('admin-only').style.display='block';
+}
 loadTrips();
 }else{
 document.getElementById('login-screen').style.display='block';
@@ -92,47 +98,78 @@ document.getElementById('app-screen').style.display='none';
 }
 });
 
-// TRIPS
 function createTrip(){
-const n=bus-name.value,d=bus-date.value;
-if(!n||!d)return alert('အချက်အလက်ပြည့်စုံပါ');
+const n = document.getElementById('bus-name').value;
+const d = document.getElementById('bus-date').value;
+if(!n || !d){ alert('အချက်အလက်ပြည့်စုံပါ'); return; }
 db.ref('trips/'+Date.now()).set({name:n,date:d});
 }
 
 function loadTrips(){
 db.ref('trips').on('value',s=>{
-let h='';const d=s.val()||{};
-Object.keys(d).forEach(id=>{
-h+=`<div onclick="openTrip('${id}','${d[id].name}')">🚌 ${d[id].name} (${d[id].date})</div>`});
-bus-list.innerHTML=h||'မရှိပါ';
+const list = document.getElementById('bus-list');
+list.innerHTML = '';
+const data = s.val() || {};
+Object.keys(data).forEach(id=>{
+const div = document.createElement('div');
+div.innerText = `🚌 ${data[id].name} (${data[id].date})`;
+div.onclick = ()=>openTrip(id,data[id].name);
+list.appendChild(div);
+});
+if(!Object.keys(data).length) list.innerText='မရှိပါ';
 });
 }
 
-function openTrip(id,name){currentTrip=id;bus-title.innerText=name;list-area.style.display='none';booking-area.style.display='block';renderSeats()}
-function backToList(){booking-area.style.display='none';list-area.style.display='block'}
+function openTrip(id,name){
+currentTrip = id;
+document.getElementById('bus-title').innerText = name;
+document.getElementById('list-area').style.display='none';
+document.getElementById('booking-area').style.display='block';
+renderSeats();
+}
+
+function backToList(){
+document.getElementById('booking-area').style.display='none';
+document.getElementById('list-area').style.display='block';
+}
 
 function renderSeats(){
 const seats=['A1','A2','B1','B2','B3','C1','C2','C3'];
 db.ref('bookings/'+currentTrip).once('value',s=>{
-seat-map.innerHTML='';const d=s.val()||{};
+const map = document.getElementById('seat-map');
+map.innerHTML='';
+const d=s.val()||{};
 seats.forEach(se=>{
 const div=document.createElement('div');
 div.className='seat '+(d[se]?'sold':'');
 div.innerText=se;
 div.onclick=()=>openSeat(se,d[se]);
-seat-map.appendChild(div);
+map.appendChild(div);
 });
 });
 }
 
-function openSeat(se,data){selectedSeat=se;seat-label.innerText='Seat '+se;if(data){c-name.value=data.name;c-phone.value=data.phone;c-price.value=data.price}else{c-name.value=c-phone.value=c-price.value=''};modal.style.display='block'}
-function closeModal(){modal.style.display='none'}
+function openSeat(se,data){
+selectedSeat=se;
+document.getElementById('seat-label').innerText='Seat '+se;
+document.getElementById('c-name').value=data?data.name:'';
+document.getElementById('c-phone').value=data?data.phone:'';
+document.getElementById('c-price').value=data?data.price:'';
+document.getElementById('modal').style.display='block';
+}
+
+function closeModal(){ document.getElementById('modal').style.display='none'; }
 
 function saveBooking(){
-const n=c-name.value,p=c-phone.value,pr=c-price.value;
-if(!n||!p||!pr)return alert('ပြည့်စုံပါ');
-db.ref(`bookings/${currentTrip}/${selectedSeat}`).set({name:n,phone:p,price:pr,soldBy:userNick});
-closeModal();renderSeats();
+const n=document.getElementById('c-name').value;
+const p=document.getElementById('c-phone').value;
+const pr=document.getElementById('c-price').value;
+if(!n||!p||!pr){ alert('ပြည့်စုံပါ'); return; }
+db.ref(`bookings/${currentTrip}/${selectedSeat}`).set({
+name:n, phone:p, price:pr, soldBy:userNick
+});
+closeModal();
+renderSeats();
 }
 </script></body>
-             </html>
+  </html>
