@@ -133,21 +133,29 @@ document.getElementById('booking-area').style.display='none';
 document.getElementById('list-area').style.display='block';
 }
 
-function renderSeats(){
-const seats=['A1','A2','B1','B2','B3','C1','C2','C3'];
-db.ref('bookings/'+currentTrip).once('value',s=>{
-const map = document.getElementById('seat-map');
-map.innerHTML='';
-const d=s.val()||{};
-seats.forEach(se=>{
-const div=document.createElement('div');
-div.className='seat '+(d[se]?'sold':'');
-div.innerText=se;
-div.onclick=()=>openSeat(se,d[se]);
-map.appendChild(div);
-});
-});
-}
+    function renderSeats(tripId) {
+        db.ref(`bookings/${tripId}`).on('value', bSnap => {
+            const booked = bSnap.val() || {};
+            db.ref(`active_sessions/${tripId}`).on('value', lSnap => {
+                const locks = lSnap.val() || {};
+                const map = document.getElementById('seat-map'); map.innerHTML = '';
+                const layout = [['A1', 'A2', 'Driver'], ['B1', 'B2', 'B3'], ['C1', 'C2', 'C3'], ['D1', 'D2', 'D3'], ['E1', 'E2', 'E3', 'E4']];
+                layout.forEach((row, idx) => {
+                    const rowDiv = document.createElement('div');
+                    if(idx === 4) rowDiv.className = 'last-row';
+                    row.forEach(s => {
+                        const div = document.createElement('div');
+                        const isSold = booked[s], isLocked = locks[s] && locks[s].user !== userNick;
+                        div.className = s === 'Driver' ? 'seat driver' : `seat ${isSold ? 'sold' : ''} ${isLocked ? 'locked' : ''}`;
+                        div.innerText = s;
+                        if(s !== 'Driver') div.onclick = () => isLocked ? alert("ဝန်ထမ်း " + locks[s].user + " ဝင်နေသည်") : openModal(s, isSold);
+                        if(idx === 4) rowDiv.appendChild(div); else map.appendChild(div);
+                    });
+                    if(idx === 4) map.appendChild(rowDiv);
+                });
+            });
+        });
+    }
 
 function openSeat(se,data){
 selectedSeat=se;
